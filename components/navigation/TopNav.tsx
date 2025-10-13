@@ -1,6 +1,7 @@
 "use client";
 
 import { navigationConfig } from '@/lib/data/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 
@@ -18,52 +19,31 @@ const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
         ${className}
       `}
     >
-      {/* Logo - only show on mobile */}
+      {/* Mobile Logo - only show on mobile */}
       <div className="flex items-center gap-2 md:hidden">
-        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-          <span className="text-black text-sm font-bold">G</span>
-        </div>
+        <Image
+          src="/goatfun.png"
+          alt="Goat Fun Logo"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+        />
         <span className="text-lg font-bold text-white">
           Goat
         </span>
       </div>
 
-      {/* Search Bar - center on desktop, full width on mobile */}
-      <div className="flex-1 max-w-2xl mx-4">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search coins..."
-            className="
-              w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 pr-20
-              text-white placeholder-gray-400
-              focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500
-              transition-colors
-            "
-          />
-          <button className="
-            absolute right-2 top-1/2 transform -translate-y-1/2
-            bg-yellow-500 text-black px-4 py-1 rounded
-            font-medium hover:bg-yellow-400 transition-colors
-          ">
-            Search
-          </button>
-        </div>
-      </div>
-
-      {/* Action Buttons - right side */}
-      <div className="flex items-center gap-3">
+      {/* Action Buttons */}
+      <div className="flex items-center gap-3 ml-auto">
         {/* Create Coin Button */}
         <Link
           href={navigationConfig.primaryAction.href}
           className="
             bg-yellow-500 text-black font-bold px-4 py-2 rounded-lg
             hover:bg-yellow-400 transition-colors
-            hidden sm:inline-flex items-center gap-2
           "
         >
-          <span className="text-lg">➕</span>
-          <span className="hidden md:inline">Create coin</span>
+          Create coin
         </Link>
 
         {/* Log In Button */}
@@ -77,14 +57,6 @@ const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
         >
           Log in
         </Link>
-
-        {/* Mobile Menu Button */}
-        <button className="
-          md:hidden text-gray-400 hover:text-white
-          p-2
-        ">
-          <span className="text-xl">☰</span>
-        </button>
       </div>
     </header>
   );

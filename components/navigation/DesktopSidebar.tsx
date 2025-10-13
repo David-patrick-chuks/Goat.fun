@@ -4,17 +4,17 @@ import { navigationConfig } from '@/lib/data/navigation';
 import type { NavigationGroup, NavigationItem } from '@/lib/types/navigation';
 import {
   BarChart3,
+  ChevronLeft,
   ChevronRight,
   Headphones,
   Home,
   MessageCircle,
   MoreHorizontal,
-  Plus,
   User,
   Video
 } from 'lucide-react';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 
 interface DesktopSidebarProps {
   className?: string;
@@ -27,11 +27,12 @@ const IconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   'message-circle': MessageCircle,
   user: User,
   headphones: Headphones,
-  'more-horizontal': MoreHorizontal,
-  plus: Plus
+  'more-horizontal': MoreHorizontal
 };
 
 const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const renderNavigationItem = (item: NavigationItem) => {
     const IconComponent = IconMap[item.icon];
     
@@ -44,16 +45,18 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
           hover:bg-gray-800
           ${item.active ? 'bg-gray-800 text-white' : 'text-gray-300 hover:text-white'}
           ${item.isNew ? 'relative' : ''}
+          ${isCollapsed ? 'justify-center' : ''}
         `}
+        title={isCollapsed ? item.label : undefined}
       >
         {IconComponent && <IconComponent className="w-5 h-5" />}
-        <span className="font-medium">{item.label}</span>
-        {item.isNew && (
+        {!isCollapsed && <span className="font-medium">{item.label}</span>}
+        {item.isNew && !isCollapsed && (
           <span className="ml-auto bg-yellow-500 text-black text-xs px-2 py-0.5 rounded-full font-bold">
             NEW
           </span>
         )}
-        {item.badge && (
+        {item.badge && !isCollapsed && (
           <span className="ml-auto bg-yellow-500 text-black text-xs px-2 py-0.5 rounded-full font-bold">
             {item.badge}
           </span>
@@ -73,8 +76,9 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
   return (
     <aside 
       className={`
-        fixed left-0 top-0 h-full w-64 bg-gray-900 border-r border-gray-800
-        flex flex-col z-40
+        fixed left-0 top-0 h-full bg-gray-900 border-r border-gray-800
+        flex flex-col z-40 transition-all duration-300
+        ${isCollapsed ? 'w-16' : 'w-64'}
         ${className}
       `}
     >
@@ -82,16 +86,29 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
       <div className="p-6">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-              <span className="text-black text-sm font-bold">G</span>
-            </div>
-            <span className="text-xl font-bold text-white">
-              Goat
-            </span>
+            <Image
+              src="/goatfun.png"
+              alt="Goat Fun Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8"
+            />
+            {!isCollapsed && (
+              <span className="text-xl font-bold text-white">
+                Goat.fun
+              </span>
+            )}
           </Link>
           {/* Collapse Icon */}
-          <button className="text-gray-400 hover:text-white p-1">
-            <ChevronRight className="w-4 h-4" />
+          <button 
+            className="text-gray-400 hover:text-white p-1"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>
@@ -101,17 +118,23 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
         {navigationConfig.navigation.map(renderNavigationGroup)}
       </div>
 
-      {/* Primary Action Button - Circular */}
+      {/* Primary Action Button */}
       <div className="p-6 flex justify-center">
         <Link
           href={navigationConfig.primaryAction.href}
           className="
-            w-12 h-12 bg-yellow-500 text-black font-bold rounded-full
+            bg-yellow-500 text-black font-bold rounded-lg
             flex items-center justify-center
             hover:bg-yellow-400 transition-colors
+            ${isCollapsed ? 'w-10 h-10 rounded-full' : 'px-4 py-2'}
           "
+          title={isCollapsed ? 'Create coin' : undefined}
         >
-          <Plus className="w-6 h-6" />
+          {isCollapsed ? (
+            <span className="text-lg">+</span>
+          ) : (
+            <span>Create coin</span>
+          )}
         </Link>
       </div>
     </aside>
