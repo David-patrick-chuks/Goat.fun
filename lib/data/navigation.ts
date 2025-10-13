@@ -105,12 +105,46 @@ export const navigationConfig: NavigationConfig = {
   }
 };
 
-// Mobile bottom navigation items (top 5 most important)
-export const mobileBottomNavItems = navigationConfig.navigation
-  .filter(group => group.showInMobile)
-  .flatMap(group => group.items)
-  .filter(item => item.showInMobile)
-  .slice(0, 5);
+// Mobile bottom navigation items (exactly like pump.fun)
+export const mobileBottomNavItems: NavigationItem[] = [
+  {
+    id: 'home',
+    label: 'Home',
+    icon: 'home',
+    href: '/',
+    active: true,
+    showInMobile: true
+  },
+  {
+    id: 'create',
+    label: 'Create',
+    icon: 'plus',
+    href: '/create',
+    showInMobile: true
+  },
+  {
+    id: 'livestreams',
+    label: 'Livestreams',
+    icon: 'camera',
+    href: '/livestreams',
+    showInMobile: true
+  },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: 'message-circle',
+    href: '/chat',
+    showInMobile: true,
+    isNew: true
+  },
+  {
+    id: 'profile',
+    label: 'Profile',
+    icon: 'user',
+    href: '/profile',
+    showInMobile: true
+  }
+];
 
 // Desktop sidebar navigation
 export const desktopSidebarItems = navigationConfig.navigation;

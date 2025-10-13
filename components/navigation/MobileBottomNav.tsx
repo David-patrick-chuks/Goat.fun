@@ -1,9 +1,9 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { mobileBottomNavItems, themeColors } from '@/lib/data/navigation';
+import { mobileBottomNavItems } from '@/lib/data/navigation';
 import type { NavigationItem } from '@/lib/types/navigation';
+import Link from 'next/link';
+import React from 'react';
 
 interface MobileBottomNavProps {
   className?: string;
@@ -26,13 +26,13 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
       key={item.id}
       href={item.href}
       className={`
-        flex flex-col items-center justify-center gap-1 p-2 min-h-[60px]
-        transition-colors
+        flex items-center justify-center p-3 min-h-[60px] w-full
+        transition-colors relative
         ${item.active ? 'text-yellow-500' : 'text-gray-400 hover:text-white'}
       `}
     >
       <div className="relative">
-        <span className="text-xl">
+        <span className="text-2xl">
           {IconMap[item.icon] || '•'}
         </span>
         {item.isNew && (
@@ -46,9 +46,6 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
           </span>
         )}
       </div>
-      <span className="text-xs font-medium truncate">
-        {item.label}
-      </span>
     </Link>
   );
 
@@ -56,7 +53,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
     <nav 
       className={`
         fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800
-        flex items-center justify-around
+        flex items-center
         safe-area-pb
         z-50
         ${className}

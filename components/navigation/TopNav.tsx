@@ -1,9 +1,8 @@
 "use client";
 
-import React from 'react';
-import Image from 'next/image';
+import { navigationConfig } from '@/lib/data/navigation';
 import Link from 'next/link';
-import { navigationConfig, searchConfig } from '@/lib/data/navigation';
+import React from 'react';
 
 interface TopNavProps {
   className?: string;
@@ -21,15 +20,11 @@ const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
     >
       {/* Logo - only show on mobile */}
       <div className="flex items-center gap-2 md:hidden">
-        <Image
-          src={navigationConfig.logo.src}
-          alt={navigationConfig.logo.alt}
-          width={24}
-          height={24}
-          className="w-6 h-6"
-        />
+        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+          <span className="text-black text-sm font-bold">G</span>
+        </div>
         <span className="text-lg font-bold text-white">
-          {navigationConfig.logo.text}
+          Goat
         </span>
       </div>
 
@@ -38,7 +33,7 @@ const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
         <div className="relative">
           <input
             type="text"
-            placeholder={searchConfig.placeholder}
+            placeholder="Search coins..."
             className="
               w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 pr-20
               text-white placeholder-gray-400
@@ -51,7 +46,7 @@ const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
             bg-yellow-500 text-black px-4 py-1 rounded
             font-medium hover:bg-yellow-400 transition-colors
           ">
-            {searchConfig.buttonText}
+            Search
           </button>
         </div>
       </div>
@@ -68,7 +63,7 @@ const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
           "
         >
           <span className="text-lg">➕</span>
-          <span className="hidden md:inline">{navigationConfig.primaryAction.label}</span>
+          <span className="hidden md:inline">Create coin</span>
         </Link>
 
         {/* Log In Button */}
@@ -80,7 +75,7 @@ const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
             font-medium
           "
         >
-          {navigationConfig.secondaryAction.label}
+          Log in
         </Link>
 
         {/* Mobile Menu Button */}

@@ -1,26 +1,107 @@
 @import "tailwindcss";
 
+/* Goat Fun Global Styles - Sleek Black Theme */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Force black theme - no light/dark mode switching */
+  --background: #000000;
+  --foreground: #ffffff;
+  --primary: #ffd700;
+  --surface: #111111;
+  --border: #333333;
+  --text-secondary: #cccccc;
+  --success: #00ff00;
+  --error: #ff0000;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Remove theme switching - force black theme */
+body {
+  background: #000000 !important;
+  color: #ffffff !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Mobile safe area support */
+@supports (padding: max(0px)) {
+  .safe-area-pb {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-pt {
+    padding-top: max(1rem, env(safe-area-inset-top));
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+/* Focus styles */
+*:focus {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+}
+
+/* Button hover effects */
+button:hover,
+a:hover {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Input styles */
+input,
+textarea {
+  background-color: #111111;
+  border: 1px solid #333333;
+  color: #ffffff;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #ffd700;
+  box-shadow: 0 0 0 1px #ffd700;
+}
+
+/* Remove default button styles */
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Link styles */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Image optimization */
+img {
+  max-width: 100%;
+  height: auto;
 }
