@@ -1,21 +1,25 @@
 "use client";
 
-import { navigationConfig } from '@/lib/data/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import React from 'react';
+import { navigationConfig } from "@/lib/data/navigation";
+import { useSidebar } from "@/lib/contexts/SidebarContext";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 
 interface TopNavProps {
   className?: string;
 }
 
-const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
+const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
+  const { isCollapsed } = useSidebar();
+  
   return (
-    <header 
+    <header
       className={`
-        fixed top-0 left-0 right-0 bg-black border-b border-gray-800
+        fixed top-0 left-0 right-0 bg-black
         flex items-center justify-between px-4 py-3
-        z-30
+        transition-all duration-300 z-30
+        ${isCollapsed ? 'md:left-16' : 'md:left-64'}
         ${className}
       `}
     >
@@ -28,9 +32,7 @@ const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
           height={24}
           className="w-6 h-6"
         />
-        <span className="text-lg font-bold text-white">
-          Goat
-        </span>
+        <span className="text-lg font-bold text-white">Goat</span>
       </div>
 
       {/* Action Buttons */}
@@ -39,23 +41,22 @@ const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
         <Link
           href={navigationConfig.primaryAction.href}
           className="
-            bg-yellow-500 text-black font-bold px-4 py-2 rounded-lg
-            hover:bg-yellow-400 transition-colors
+            bg-yellow-500 text-sm font-medium px-2 py-2 rounded-lg
+            hover:bg-yellow-400 transition-colors 
           "
         >
-          Create coin
+          <span className="text-black">Create coin</span>
         </Link>
 
         {/* Log In Button */}
         <Link
           href={navigationConfig.secondaryAction.href}
           className="
-            bg-transparent border border-gray-600 text-white px-4 py-2 rounded-lg
-            hover:bg-gray-800 hover:border-gray-500 transition-colors
-            font-medium
+            bg-yellow-500 text-sm font-medium px-2 py-2 rounded-lg
+            hover:bg-yellow-400 transition-colors
           "
         >
-          Log in
+          <span className="text-black">Log in</span>
         </Link>
       </div>
     </header>

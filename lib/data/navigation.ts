@@ -32,13 +32,6 @@ export const navigationConfig: NavigationConfig = {
           icon: 'camera',
           href: '/livestreams',
           showInMobile: true
-        },
-        {
-          id: 'advanced',
-          label: 'Advanced',
-          icon: 'chart',
-          href: '/advanced',
-          showInMobile: false
         }
       ]
     },
