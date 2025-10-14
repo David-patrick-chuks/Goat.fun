@@ -188,6 +188,7 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
             {item.id === 'livestreams' ? 'Live' : item.label}
           </span>
         )}
+        
         {!isCollapsed && (
           <span className={`${isActive ? 'text-[#ffea00]' : 'text-white/70'}`}>
             {item.label}
@@ -275,7 +276,7 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
           title={isCollapsed ? 'Create market' : undefined}
         >
           {isCollapsed ? (
-            <span className="text-lg">+</span>
+            <span className="text-lg text-black">+</span>
           ) : (
             <span>Create market</span>
           )}
