@@ -16,7 +16,7 @@ const SearchSection: React.FC<SearchSectionProps> = ({ className = '' }) => {
       <div className="relative max-w-2xl">
         <input
           type="text"
-          placeholder="Search coins..."
+          placeholder="Search markets..."
           className="
             w-full bg-black border border-white/20 rounded-lg px-4 py-3 pl-12
             text-white placeholder-white/50

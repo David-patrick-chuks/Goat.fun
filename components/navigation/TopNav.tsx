@@ -45,7 +45,7 @@ const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
             hover:bg-[#ffea00] transition-colors 
           "
         >
-          <span className="text-black">Create coin</span>
+          <span className="text-black">Create market</span>
         </Link>
 
         {/* Log In Button */}

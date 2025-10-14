@@ -3,7 +3,7 @@
  * Dummy data that can be easily replaced with backend API calls
  */
 
-import type { NavigationConfig } from '../types/navigation';
+import type { NavigationConfig, NavigationItem } from '../types/navigation';
 
 export const navigationConfig: NavigationConfig = {
   logo: {
@@ -87,7 +87,7 @@ export const navigationConfig: NavigationConfig = {
   },
   
   primaryAction: {
-    label: 'Create coin',
+    label: 'Create market',
     href: '/create',
     icon: 'plus'
   },
@@ -144,7 +144,7 @@ export const desktopSidebarItems = navigationConfig.navigation;
 
 // Search configuration
 export const searchConfig = {
-  placeholder: 'Search coins...',
+  placeholder: 'Search markets...',
   buttonText: 'Search'
 };
 

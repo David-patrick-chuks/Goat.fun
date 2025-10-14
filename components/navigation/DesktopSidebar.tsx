@@ -4,16 +4,17 @@ import { useSidebar } from '@/lib/contexts/SidebarContext';
 import { navigationConfig } from '@/lib/data/navigation';
 import type { NavigationGroup, NavigationItem } from '@/lib/types/navigation';
 import {
-    BarChart3,
-    ChevronLeft,
-    ChevronRight,
-    Headphones,
-    Home,
-    MessageCircle,
-    MoreVertical,
-    User,
-    Video
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  Headphones,
+  Home,
+  MessageCircle,
+  MoreVertical,
+  User,
+  Video
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
@@ -184,7 +185,7 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
         </div>
         {isCollapsed && (
           <span className={`text-xs mt-1 text-center leading-tight ${isActive ? 'text-[#ffea00]' : 'text-white/70'}`}>
-            {item.label}
+            {item.id === 'livestreams' ? 'Live' : item.label}
           </span>
         )}
         {!isCollapsed && (
@@ -224,15 +225,16 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
       `}
     >
       {/* Logo */}
-      <div className={`${isCollapsed ? "p-4" : "p-6"}`}>
+      <div className={`${isCollapsed ? "p-4" : "p-6"} `}>
         <div className={`flex items-center justify-between ${isCollapsed ? "flex-col" : "flex-row" }`}>
           <Link href="/" className="flex items-center gap-3">
-            <img
+            <Image
               src="/goatfun.png"
               alt="Goat Fun Logo"
               width={32}
               height={32}
               className="w-8 h-8"
+              priority
             />
             {!isCollapsed && (
               <span className="text-xl font-bold text-white">
@@ -242,14 +244,14 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
           </Link>
           {/* Collapse Button */}
           <button 
-            className="text-white/50 hover:text-white p-1 transition-colors"
+            className="text-white/50  hover:text-white p-1  transition-colors"
             onClick={() => setIsCollapsed(!isCollapsed)}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-6 h-6 -mb-3 mt-1" />
             ) : (
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-6 h-6" />
             )}
           </button>
         </div>
@@ -270,12 +272,12 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
             hover:bg-[#ffea00] transition-colors
             ${isCollapsed ? 'w-10 h-10 rounded-full' : 'px-4 py-2'}
           "
-          title={isCollapsed ? 'Create coin' : undefined}
+          title={isCollapsed ? 'Create market' : undefined}
         >
           {isCollapsed ? (
             <span className="text-lg">+</span>
           ) : (
-            <span>Create coin</span>
+            <span>Create market</span>
           )}
         </Link>
       </div>
