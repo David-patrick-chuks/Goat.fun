@@ -7,7 +7,7 @@ export default function CreateContent() {
       <div className="bg-black border border-white/10 rounded-lg p-8 max-w-2xl mx-auto">
         <div className="text-center">
           <div className="w-20 h-20 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
-            <svg className="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-10 h-10 text-[#ffea00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
           </div>
@@ -17,19 +17,19 @@ export default function CreateContent() {
             <input 
               type="text" 
               placeholder="Coin Name"
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
+              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]"
             />
             <input 
               type="text" 
               placeholder="Symbol (e.g., DOGE)"
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
+              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]"
             />
             <textarea 
               placeholder="Description"
               rows={4}
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-yellow-500"
+              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]"
             />
-            <button className="w-full bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors">
+            <button className="w-full bg-[#ffea00] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[#ffea00] transition-colors">
               Create Coin
             </button>
           </div>

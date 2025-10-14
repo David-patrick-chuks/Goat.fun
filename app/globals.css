@@ -5,7 +5,9 @@
   /* Force black theme - no light/dark mode switching */
   --background: #000000;
   --foreground: #ffffff;
-  --primary: #ffd700;
+  /* --primary: #ffea00; */
+  --primary: #ffea00
+  ;
   --surface: #111111;
   --border: #333333;
   --text-secondary: #cccccc;
@@ -63,8 +65,8 @@ body {
 
 /* Focus styles */
 *:focus {
-  outline: 2px solid #ffd700;
-  outline-offset: 2px;
+  /* outline: 2px solid #ffea00; */
+  /* outline-offset: 2px; */
 }
 
 /* Button hover effects */
@@ -83,8 +85,8 @@ textarea {
 
 input:focus,
 textarea:focus {
-  border-color: #ffd700;
-  box-shadow: 0 0 0 1px #ffd700;
+  border-color: #ffea00;
+  box-shadow: 0 0 0 1px #ffea00;
 }
 
 /* Remove default button styles */

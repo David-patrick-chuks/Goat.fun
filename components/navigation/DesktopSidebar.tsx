@@ -4,15 +4,15 @@ import { useSidebar } from '@/lib/contexts/SidebarContext';
 import { navigationConfig } from '@/lib/data/navigation';
 import type { NavigationGroup, NavigationItem } from '@/lib/types/navigation';
 import {
-  BarChart3,
-  ChevronLeft,
-  ChevronRight,
-  Headphones,
-  Home,
-  MessageCircle,
-  MoreVertical,
-  User,
-  Video
+    BarChart3,
+    ChevronLeft,
+    ChevronRight,
+    Headphones,
+    Home,
+    MessageCircle,
+    MoreVertical,
+    User,
+    Video
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -68,7 +68,7 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
             className={`
               w-full flex items-center rounded-lg transition-colors
               hover:bg-white/5
-              ${isActive ? 'bg-black text-yellow-500' : 'text-white/70 hover:text-white'}
+              ${isActive ? 'bg-black text-[#ffea00]' : 'text-white/70 hover:text-white'}
               ${item.isNew ? 'relative' : ''}
               ${isCollapsed ? 'flex-col justify-center px-2 py-1' : 'gap-3 px-4 py-3'}
             `}
@@ -77,29 +77,29 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
             <div className="relative">
               {IconComponent && <IconComponent className={`${isCollapsed ? "w-6 h-6" : "w-5 h-5"}`} />}
               {item.isNew && isCollapsed && (
-                <span className="absolute -top-1 -right-1 bg-yellow-500 text-black text-[8px] px-1 py-0.5 rounded-full font-bold">
+                <span className="absolute -top-1 -right-1 bg-[#ffea00] text-black text-[8px] px-1 py-0.5 rounded-full font-bold">
                   NEW
                 </span>
               )}
               {item.badge && isCollapsed && (
-                <span className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs px-1 py-0.5 rounded-full font-bold">
+                <span className="absolute -top-1 -right-1 bg-[#ffea00] text-black text-xs px-1 py-0.5 rounded-full font-bold">
                   {item.badge}
                 </span>
               )}
             </div>
             {isCollapsed && (
-              <span className={`text-xs mt-1 text-center leading-tight ${isActive ? 'text-yellow-500' : 'text-white/70'}`}>
+              <span className={`text-xs mt-1 text-center leading-tight ${isActive ? 'text-[#ffea00]' : 'text-white/70'}`}>
                 {item.label}
               </span>
             )}
-            {!isCollapsed && <span className={`${isActive ? 'text-yellow-500' : 'text-white/70'}`}>{item.label}</span>}
+            {!isCollapsed && <span className={`${isActive ? 'text-[#ffea00]' : 'text-white/70'}`}>{item.label}</span>}
             {item.isNew && !isCollapsed && (
-              <span className="ml-auto bg-yellow-500 text-black text-xs px-2 py-0.5 rounded-full font-bold">
+              <span className="ml-auto bg-[#ffea00] text-black text-xs px-2 py-0.5 rounded-full font-bold">
                 NEW
               </span>
             )}
             {item.badge && !isCollapsed && (
-              <span className="ml-auto bg-yellow-500 text-black text-xs px-2 py-0.5 rounded-full font-bold">
+              <span className="ml-auto bg-[#ffea00] text-black text-xs px-2 py-0.5 rounded-full font-bold">
                 {item.badge}
               </span>
             )}
@@ -167,38 +167,38 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
         <div className="relative">
           {IconComponent && (
             <IconComponent 
-              className={`${isCollapsed ? "w-6 h-6" : "w-5 h-5"} ${isActive ? 'text-yellow-500 fill-yellow-500' : 'text-white/70'}`}
+              className={`${isCollapsed ? "w-6 h-6" : "w-5 h-5"} ${isActive ? 'text-[#ffea00] fill-[#ffea00]' : 'text-white/70'}`}
               fill={isActive ? 'currentColor' : 'none'}
             />
           )}
           {item.isNew && isCollapsed && (
-            <span className="absolute -top-1 -right-1 bg-yellow-500 text-black text-[8px] px-1 py-0.5 rounded-full font-bold">
+            <span className="absolute -top-1 -right-1 bg-[#ffea00] text-black text-[8px] px-1 py-0.5 rounded-full font-bold">
               NEW
             </span>
           )}
           {item.badge && isCollapsed && (
-            <span className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs px-1 py-0.5 rounded-full font-bold">
+            <span className="absolute -top-1 -right-1 bg-[#ffea00] text-black text-xs px-1 py-0.5 rounded-full font-bold">
               {item.badge}
             </span>
           )}
         </div>
         {isCollapsed && (
-          <span className={`text-xs mt-1 text-center leading-tight ${isActive ? 'text-yellow-500' : 'text-white/70'}`}>
+          <span className={`text-xs mt-1 text-center leading-tight ${isActive ? 'text-[#ffea00]' : 'text-white/70'}`}>
             {item.label}
           </span>
         )}
         {!isCollapsed && (
-          <span className={`${isActive ? 'text-yellow-500' : 'text-white/70'}`}>
+          <span className={`${isActive ? 'text-[#ffea00]' : 'text-white/70'}`}>
             {item.label}
           </span>
         )}
         {item.isNew && !isCollapsed && (
-          <span className="ml-auto bg-yellow-500 text-black text-xs px-2 py-0.5 rounded-full font-bold">
+          <span className="ml-auto bg-[#ffea00] text-black text-xs px-2 py-0.5 rounded-full font-bold">
             NEW
           </span>
         )}
         {item.badge && !isCollapsed && (
-          <span className="ml-auto bg-yellow-500 text-black text-xs px-2 py-0.5 rounded-full font-bold">
+          <span className="ml-auto bg-[#ffea00] text-black text-xs px-2 py-0.5 rounded-full font-bold">
             {item.badge}
           </span>
         )}
@@ -265,9 +265,9 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className = '' }) => {
         <Link
           href={navigationConfig.primaryAction.href}
           className="
-            bg-yellow-500 text-black font-bold rounded-lg
+            bg-[#ffea00] text-black font-bold rounded-lg
             flex items-center justify-center
-            hover:bg-yellow-400 transition-colors
+            hover:bg-[#ffea00] transition-colors
             ${isCollapsed ? 'w-10 h-10 rounded-full' : 'px-4 py-2'}
           "
           title={isCollapsed ? 'Create coin' : undefined}

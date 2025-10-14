@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
-import Image from 'next/image';
 import type { Coin } from '@/lib/data/coins';
+import Image from 'next/image';
+import React from 'react';
 
 interface CoinCardProps {
   coin: Coin;
@@ -20,7 +20,7 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin, className = '' }) => {
   };
 
   const getPriceChangeColor = (change: number) => {
-    if (change > 0) return 'text-yellow-500';
+    if (change > 0) return 'text-[#ffea00]';
     if (change < 0) return 'text-red-400';
     return 'text-gray-400';
   };

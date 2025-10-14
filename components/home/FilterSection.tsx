@@ -1,7 +1,7 @@
 "use client";
 
-import React from 'react';
 import { ChevronDown, Flame, ToggleLeft, ToggleRight } from 'lucide-react';
+import React from 'react';
 
 interface FilterSectionProps {
   className?: string;
@@ -26,7 +26,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ className = '' }) => {
             className="
               bg-black border border-white/20 rounded-lg px-4 py-2 pr-8
               text-white appearance-none cursor-pointer
-              focus:outline-none focus:border-yellow-500
+              focus:outline-none focus:border-[#ffea00]
             "
           >
             <option value="featured">sort: featured</option>
@@ -37,7 +37,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ className = '' }) => {
           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
             <ChevronDown className="w-4 h-4 text-white/50" />
           </div>
-          <Flame className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-yellow-500" />
+          <Flame className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#ffea00]" />
         </div>
 
         {/* Show Animations Toggle */}
@@ -45,12 +45,12 @@ const FilterSection: React.FC<FilterSectionProps> = ({ className = '' }) => {
           <span className="text-white text-sm">Show animations:</span>
           <button
             onClick={() => setShowAnimations(!showAnimations)}
-            className="flex items-center gap-1 text-white hover:text-yellow-500 transition-colors"
+            className="flex items-center gap-1 text-white hover:text-[#ffea00] transition-colors"
           >
             {showAnimations ? (
               <>
-                <span className="text-yellow-500">on</span>
-                <ToggleRight className="w-4 h-4 text-yellow-500" />
+                <span className="text-[#ffea00]">on</span>
+                <ToggleRight className="w-4 h-4 text-[#ffea00]" />
               </>
             ) : (
               <>
@@ -66,12 +66,12 @@ const FilterSection: React.FC<FilterSectionProps> = ({ className = '' }) => {
           <span className="text-white text-sm">Include nsfw:</span>
           <button
             onClick={() => setIncludeNSFW(!includeNSFW)}
-            className="flex items-center gap-1 text-white hover:text-yellow-500 transition-colors"
+            className="flex items-center gap-1 text-white hover:text-[#ffea00] transition-colors"
           >
             {includeNSFW ? (
               <>
-                <span className="text-yellow-500">on</span>
-                <ToggleRight className="w-4 h-4 text-yellow-500" />
+                <span className="text-[#ffea00]">on</span>
+                <ToggleRight className="w-4 h-4 text-[#ffea00]" />
               </>
             ) : (
               <>
