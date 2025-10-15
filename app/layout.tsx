@@ -1,3 +1,4 @@
+import '@rainbow-me/rainbowkit/styles.css';
 import ResponsiveLayout from "@/components/layout/ResponsiveLayout";
 import DesktopSidebar from "@/components/navigation/DesktopSidebar";
 import MobileBottomNav from "@/components/navigation/MobileBottomNav";
@@ -6,6 +7,9 @@ import { SidebarProvider } from "@/lib/contexts/SidebarContext";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Providers } from './providers';
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +36,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased  bg-black text-white`}
       >
+        <Providers>
         <SidebarProvider>
           <div className="min-h-screen bg-black">
             <DesktopSidebar className="hidden md:block" />
@@ -47,6 +52,7 @@ export default function RootLayout({
             <MobileBottomNav className="block md:hidden" />
           </div>
         </SidebarProvider>
+        </Providers>
       </body>
     </html>
   );

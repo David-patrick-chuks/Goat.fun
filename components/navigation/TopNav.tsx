@@ -1,18 +1,33 @@
 "use client";
-
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
 import { useSidebar } from "@/lib/contexts/SidebarContext";
 import { navigationConfig } from "@/lib/data/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-
+import {
+  useConnectModal,
+  useAccountModal,
+  useChainModal,
+} from '@rainbow-me/rainbowkit';
+import { disconnect } from '@wagmi/core'
+import { config } from '@/hooks/wagmi';
 interface TopNavProps {
   className?: string;
 }
 
 const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
   const { isCollapsed } = useSidebar();
-  
+   const { isConnected } = useAccount();
+   
+  const { openConnectModal } = useConnectModal();
+  const { openAccountModal } = useAccountModal();
+  const { openChainModal } = useChainModal();
+
+  const handledisconnect = async () => {
+    await disconnect(config)
+  }
   return (
     <header
       className={`
@@ -23,6 +38,33 @@ const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
         ${className}
       `}
     >
+       {openConnectModal && (
+        <h1 onClick={openConnectModal} >
+          Open Connect Modal
+        </h1>
+      )}
+
+{openChainModal && (
+  <h1 onClick={openChainModal} >
+    Open Chain Modal
+  </h1>
+)}
+      {openAccountModal && (
+        <h1 onClick={openAccountModal} >
+          Open Account Modal
+        </h1>
+      )}
+
+        <h1 onClick={() => handledisconnect()} >
+          disconnect
+        </h1>
+             <ConnectButton 
+            accountStatus={{
+              smallScreen: 'avatar',
+              largeScreen: 'full',
+            }}
+            chainStatus="icon"
+          />
       {/* Mobile Logo - only show on mobile */}
       <div className="flex items-center gap-2 md:hidden">
         <Image
