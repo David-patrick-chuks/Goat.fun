@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Goat Fun - Meme Coin Platform",
-  description: "Create and trade meme coins on Goat Network",
+  title: "Goat Fun - Meme Market Platform",
+  description: "Create and trade meme markets on Goat Network",
 };
 
 export default function RootLayout({

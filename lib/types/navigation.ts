@@ -76,7 +76,7 @@ export interface NavigationConfig {
   /** User profile information */
   user: UserProfile;
   
-  /** Primary action button (like "Create coin") */
+  /** Primary action button (like "Create market") */
   primaryAction: {
     label: string;
     href: string;

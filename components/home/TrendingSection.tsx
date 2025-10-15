@@ -1,16 +1,16 @@
 "use client";
 
-import type { Coin } from '@/lib/data/coins';
+import type { Market } from '@/lib/data/markets';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import React from 'react';
-import CoinCard from './CoinCard';
+import MarketCard from './MarketCard';
 
 interface TrendingSectionProps {
-  coins: Coin[];
+  markets: Market[];
   className?: string;
 }
 
-const TrendingSection: React.FC<TrendingSectionProps> = ({ coins, className = '' }) => {
+const TrendingSection: React.FC<TrendingSectionProps> = ({ markets, className = '' }) => {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
 
   const scrollByAmount = (direction: "left" | "right") => {
@@ -43,16 +43,16 @@ const TrendingSection: React.FC<TrendingSectionProps> = ({ coins, className = ''
         </div>
       </div>
       
-      <div
-        ref={containerRef}
-        className="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar"
-      >
-        {coins.map((coin) => (
-          <div key={coin.id} className="min-w-[260px] md:min-w-[300px] lg:min-w-[320px] snap-start">
-            <CoinCard coin={coin} />
-          </div>
-        ))}
-      </div>
+       <div
+         ref={containerRef}
+         className="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar"
+       >
+         {markets.map((market) => (
+           <div key={market.id} className="min-w-[320px] snap-start flex-shrink-0">
+             <MarketCard market={market} />
+           </div>
+         ))}
+       </div>
     </div>
   );
 };

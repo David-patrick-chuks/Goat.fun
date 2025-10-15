@@ -37,11 +37,11 @@ const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
 
       {/* Action Buttons */}
       <div className="flex items-center gap-3 ml-auto">
-        {/* Create Coin Button */}
+        {/* Create Market Button */}
         <Link
           href={navigationConfig.primaryAction.href}
           className="
-            bg-[#ffea00] text-sm font-medium px-2 py-2 rounded-lg
+            bg-[#ffea00] text-sm font-medium px-2 py-1 rounded-lg
             hover:bg-[#ffea00] transition-colors 
           "
         >
@@ -52,7 +52,7 @@ const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
         <Link
           href={navigationConfig.secondaryAction.href}
           className="
-            bg-[#ffea00] text-sm font-medium px-2 py-2 rounded-lg
+            bg-[#ffea00] text-sm font-medium px-2 py-1 rounded-lg
             hover:bg-[#ffea00] transition-colors
           "
         >

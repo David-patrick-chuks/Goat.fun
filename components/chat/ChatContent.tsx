@@ -12,7 +12,7 @@ export default function ChatContent() {
             </svg>
           </div>
           <h2 className="text-xl font-semibold text-white mb-2">Join the Conversation</h2>
-          <p className="text-white/70 mb-6">Connect with other meme coin enthusiasts and share your thoughts</p>
+          <p className="text-white/70 mb-6">Connect with other meme market enthusiasts and share your thoughts</p>
           <button className="bg-[#ffea00] text-black px-6 py-2 rounded-lg font-semibold hover:bg-[#ffea00] transition-colors">
             Start Chatting
           </button>

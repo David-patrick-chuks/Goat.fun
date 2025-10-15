@@ -83,11 +83,12 @@ textarea {
   color: #ffffff;
 }
 
-input:focus,
-textarea:focus {
-  border-color: #ffea00;
-  box-shadow: 0 0 0 1px #ffea00;
-}
+/* input:focus,
+textarea:focus { */
+  /* border-color: #ffea00; */
+  /* box-shadow: 0 0 0 1px #ffea00; */
+  
+/* } */
 
 /* Remove default button styles */
 button {

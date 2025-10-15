@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Flame, ToggleLeft, ToggleRight } from 'lucide-react';
+import { ChevronDown, Flame } from 'lucide-react';
 import React from 'react';
 
 interface FilterSectionProps {
@@ -17,15 +17,16 @@ const FilterSection: React.FC<FilterSectionProps> = ({ className = '' }) => {
       mb-8
       ${className}
     `}>
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-8">
         {/* Sort Dropdown */}
         <div className="relative">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
+            aria-label="Sort markets by"
             className="
-              bg-black border border-white/20 rounded-lg px-4 py-2 pr-8
-              text-white appearance-none cursor-pointer
+              bg-black border border-white/20 rounded-lg px-3 py-2 pr-8 pl-8
+              text-white appearance-none cursor-pointer text-sm
               focus:outline-none focus:border-[#ffea00]
             "
           >
@@ -40,47 +41,29 @@ const FilterSection: React.FC<FilterSectionProps> = ({ className = '' }) => {
           <Flame className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#ffea00]" />
         </div>
 
-        {/* Show Animations Toggle */}
-        <div className="flex items-center gap-2">
-          <span className="text-white text-sm">Show animations:</span>
-          <button
-            onClick={() => setShowAnimations(!showAnimations)}
-            className="flex items-center gap-1 text-white hover:text-[#ffea00] transition-colors"
-          >
-            {showAnimations ? (
-              <>
-                <span className="text-[#ffea00]">on</span>
-                <ToggleRight className="w-4 h-4 text-[#ffea00]" />
-              </>
-            ) : (
-              <>
-                <span className="text-white/50">off</span>
-                <ToggleLeft className="w-4 h-4 text-white/50" />
-              </>
-            )}
-          </button>
-        </div>
+         {/* Show Animations Toggle */}
+         <div className="flex items-center gap-2">
+           <span className="text-white text-sm">Show animations:</span>
+           <button
+             onClick={() => setShowAnimations(!showAnimations)}
+             className="flex items-center gap-2 text-white hover:text-[#ffea00] transition-colors"
+           >
+             <span className={`text-sm ${showAnimations ? 'text-[#ffea00]' : 'text-white/50'}`}>on</span>
+             <span className={`text-sm ${!showAnimations ? 'text-[#ffea00]' : 'text-white/50'}`}>off</span>
+           </button>
+         </div>
 
-        {/* Include NSFW Toggle */}
-        <div className="flex items-center gap-2">
-          <span className="text-white text-sm">Include nsfw:</span>
-          <button
-            onClick={() => setIncludeNSFW(!includeNSFW)}
-            className="flex items-center gap-1 text-white hover:text-[#ffea00] transition-colors"
-          >
-            {includeNSFW ? (
-              <>
-                <span className="text-[#ffea00]">on</span>
-                <ToggleRight className="w-4 h-4 text-[#ffea00]" />
-              </>
-            ) : (
-              <>
-                <span className="text-white/50">off</span>
-                <ToggleLeft className="w-4 h-4 text-white/50" />
-              </>
-            )}
-          </button>
-        </div>
+         {/* Include NSFW Toggle */}
+         <div className="flex items-center gap-2">
+           <span className="text-white text-sm">Include nsfw:</span>
+           <button
+             onClick={() => setIncludeNSFW(!includeNSFW)}
+             className="flex items-center gap-2 text-white hover:text-[#ffea00] transition-colors"
+           >
+             <span className={`text-sm ${includeNSFW ? 'text-[#ffea00]' : 'text-white/50'}`}>on</span>
+             <span className={`text-sm ${!includeNSFW ? 'text-[#ffea00]' : 'text-white/50'}`}>off</span>
+           </button>
+         </div>
       </div>
     </div>
   );

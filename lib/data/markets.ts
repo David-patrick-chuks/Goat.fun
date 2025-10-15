@@ -1,8 +1,8 @@
 /**
- * Dummy data for coins and trending items
+ * Dummy data for markets and trending items
  */
 
-export interface Coin {
+export interface Market {
   id: string;
   name: string;
   ticker: string;
@@ -15,7 +15,7 @@ export interface Coin {
   replies?: number;
 }
 
-export const trendingCoins: Coin[] = [
+export const trendingMarkets: Market[] = [
   {
     id: '1',
     name: 'The Lion',
@@ -64,8 +64,8 @@ export const trendingCoins: Coin[] = [
   }
 ];
 
-export const allCoins: Coin[] = [
-  ...trendingCoins,
+export const allMarkets: Market[] = [
+  ...trendingMarkets,
   {
     id: '5',
     name: 'Portland Frog Brigade',
