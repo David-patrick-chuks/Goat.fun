@@ -1,8 +1,8 @@
 import cors from "cors";
 import express from "express";
 import http from "http";
-import { env } from "./config/env";
 import { Server, Socket } from "socket.io";
+import { env } from "./config/env";
 import { EXPIRY_SWEEP_INTERVAL_MS } from "./constants/index";
 import { connectMongo } from "./db/mongo";
 import { Market } from "./models/Market";
@@ -12,9 +12,14 @@ import type { ClientEvents, ServerEvents } from "./types/socket";
 
 async function bootstrap() {
   await connectMongo();
+  console.log("[db] ready");
 
   const app = express();
   app.use(cors({ origin: env.CORS_ORIGIN }));
+  // Health route
+  app.get("/health", (_req, res) => {
+    res.json({ ok: true, db: (require("mongoose") as typeof import("mongoose")).connection.readyState === 1 ? "connected" : "disconnected" });
+  });
 
   const server = http.createServer(app);
   const io: Server<ClientEvents, ServerEvents> = new Server(server, {
@@ -44,7 +49,7 @@ async function bootstrap() {
   }, EXPIRY_SWEEP_INTERVAL_MS);
 
   server.listen(env.PORT, () => {
-    console.log(`GoatFun backend running on :${env.PORT}`);
+    console.log(`[http] GoatFun backend running on :${env.PORT}`);
   });
 }
 

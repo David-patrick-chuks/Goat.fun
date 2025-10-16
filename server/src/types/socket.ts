@@ -10,6 +10,7 @@ export interface ClientEvents {
   stop_stream: (data: { marketId: string }, ack?: (result: AckResult) => void) => void;
   end_market: (data: { marketId: string; finalResult?: Side | "none" }, ack?: (result: AckResult) => void) => void;
   get_markets: (data: { status?: "active" | "ended" | "cancelled" }, ack?: (result: AckResult) => void) => void;
+  get_user: (data: { wallet: string }, ack?: (result: AckResult) => void) => void;
   get_market_detail: (data: { marketId: string }, ack?: (result: AckResult) => void) => void;
 }
 

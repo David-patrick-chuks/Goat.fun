@@ -1,6 +1,42 @@
 "use client";
 
+import { getSocket } from "@/lib/socket";
+import React from "react";
+import type { Ack } from "@/lib/types";
+import { useAccount } from "wagmi";
+
 export default function ProfileContent() {
+  const { address, isConnected } = useAccount();
+  const [username, setUsername] = React.useState<string>("");
+  const [bio, setBio] = React.useState<string>("");
+  const [avatarUrl, setAvatarUrl] = React.useState<string>("");
+  const [followers, setFollowers] = React.useState<number>(0);
+  const [following, setFollowing] = React.useState<number>(0);
+  const [createdMarkets, setCreatedMarkets] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    if (!isConnected || !address) return;
+    const socket = getSocket();
+    socket.emit('get_user', { wallet: address }, (res: Ack<{
+      username?: string;
+      bio?: string;
+      avatarUrl?: string;
+      followers?: unknown[];
+      following?: unknown[];
+      createdMarkets?: unknown[];
+    }>) => {
+      if (res?.ok && res.data) {
+        const u = res.data;
+        setUsername(u.username || address.slice(0, 6));
+        setBio(u.bio || "");
+        setAvatarUrl(u.avatarUrl || "/goatfun.png");
+        setFollowers((u.followers || []).length);
+        setFollowing((u.following || []).length);
+        setCreatedMarkets((u.createdMarkets || []).length);
+      }
+    });
+  }, [isConnected, address]);
+
   return (
     <div className="px-4 py-8">
       {/* Header */}
@@ -10,34 +46,49 @@ export default function ProfileContent() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="w-18 h-18 md:w-20 md:h-20 bg-white/10 rounded-full overflow-hidden flex items-center justify-center">
-            <span className="text-3xl">🐸</span>
+            {/* basic avatar */}
+            <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
           </div>
           <div>
             <div className="flex items-center flex-wrap gap-2">
-              <h1 className="text-2xl font-semibold text-white">cj6kln</h1>
-              <span className="bg-white/10 text-white/80 text-[11px] px-2 py-0.5 rounded">CJ6KL...kVfg</span>
+              <h1 className="text-2xl font-semibold text-white">{username || (address ? address.slice(0, 6) : "-")}</h1>
+              {address && <span className="bg-white/10 text-white/80 text-[11px] px-2 py-0.5 rounded">{address.slice(0, 6)}...{address.slice(-4)}</span>}
               <a href="#" className="text-white/60 text-xs flex items-center gap-1 hover:text-white">
                 <span>View on solscan</span>
               </a>
             </div>
-            <p className="text-white/70 text-sm mt-2">big bannyy</p>
+            <p className="text-white/70 text-sm mt-2">{bio}</p>
           </div>
         </div>
-        <button className="bg-[#2f3a4d] hover:bg-[#38475f] text-white px-4 py-2 rounded-md text-sm font-medium">edit</button>
+        <button
+          onClick={() => {
+            const nextUsername = prompt('Username', username || '') || username;
+            const nextBio = prompt('Bio', bio || '') || bio;
+            if (!address) return;
+            const socket = getSocket();
+            socket.emit('update_profile', { wallet: address, username: nextUsername, bio: nextBio }, (res: Ack) => {
+              if (res?.ok) { setUsername(nextUsername); setBio(nextBio); }
+              else alert(res?.error || 'Failed to update');
+            });
+          }}
+          className="bg-[#2f3a4d] hover:bg-[#38475f] text-white px-4 py-2 rounded-md text-sm font-medium"
+        >
+          edit
+        </button>
       </div>
 
       {/* Stats */}
       <div className="flex items-center gap-10 mb-6">
         <div>
-          <p className="text-white text-lg font-semibold">0</p>
+          <p className="text-white text-lg font-semibold">{followers}</p>
           <p className="text-white/60 text-sm">Followers</p>
         </div>
         <div>
-          <p className="text-white text-lg font-semibold">0</p>
+          <p className="text-white text-lg font-semibold">{following}</p>
           <p className="text-white/60 text-sm">Following</p>
         </div>
         <div>
-          <p className="text-white text-lg font-semibold">0</p>
+          <p className="text-white text-lg font-semibold">{createdMarkets}</p>
           <p className="text-white/60 text-sm">Created coins</p>
         </div>
       </div>

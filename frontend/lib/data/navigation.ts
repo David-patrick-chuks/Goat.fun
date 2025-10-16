@@ -94,7 +94,7 @@ export const navigationConfig: NavigationConfig = {
   
   secondaryAction: {
     label: 'Log in',
-    href: '/login'
+    href: '#'
   }
 };
 

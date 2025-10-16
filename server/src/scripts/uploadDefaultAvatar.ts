@@ -3,7 +3,7 @@ import path from "path";
 import { uploadLocalFile } from "../services/uploadService";
 
 async function main(): Promise<void> {
-  const localPath = path.resolve(path.join(path.dirname(new URL(import.meta.url).pathname), "..", "GOATavatar.png"));
+  const localPath = path.resolve(path.join(__dirname, "..", "GOATFUNavatar.png"));
   if (!fs.existsSync(localPath)) {
     throw new Error(`Default avatar not found at ${localPath}`);
   }

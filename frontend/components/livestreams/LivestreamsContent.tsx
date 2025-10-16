@@ -1,21 +1,59 @@
 "use client";
 
-import {  livestreams } from '@/lib/data/livestreams';
+import type { Livestream } from '@/lib/data/livestreams';
 import React from 'react';
 import LivestreamCard from './LivestreamCard';
 import LivestreamSkeleton from './LivestreamSkeleton';
+import { io, Socket } from 'socket.io-client';
+import type { Ack, BackendMarket } from '@/lib/types';
 
 export default function LivestreamsContent() {
   const [includeNSFW, setIncludeNSFW] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [streams, setStreams] = React.useState<Livestream[]>([]);
 
-  // Simulate loading
   React.useEffect(() => {
-    const timer = setTimeout(() => {
+    const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+    const socket: Socket = io(url, { transports: ['websocket'] });
+    setIsLoading(true);
+    socket.emit('get_markets', {}, (res: Ack<BackendMarket[]>) => {
       setIsLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
+      if (res?.ok && Array.isArray(res.data)) {
+        const live = (res.data as BackendMarket[]).filter((m) => m.livestream?.isLive);
+        const mapped: Livestream[] = live.map((m) => ({
+          id: String(m._id),
+          name: m.title,
+          creator: m.creator,
+          image: m.banner || '/goatfun.png',
+          isLive: true,
+          platform: 'GoatFun',
+          marketCap: Math.floor((m.poolBalance ?? 0) + (m.bullishSupply ?? 0) + (m.fadeSupply ?? 0)),
+          ath: m.creatorRevenue?.totalEarned ?? 0,
+          viewers: m.livestream?.totalViews ?? undefined,
+        }));
+        setStreams(mapped);
+      }
+    });
+    socket.on('stream_update', () => {
+      socket.emit('get_markets', {}, (res: Ack<BackendMarket[]>) => {
+        if (res?.ok && Array.isArray(res.data)) {
+          const live = (res.data as BackendMarket[]).filter((m) => m.livestream?.isLive);
+          const mapped: Livestream[] = live.map((m) => ({
+            id: String(m._id),
+            name: m.title,
+            creator: m.creator,
+            image: m.banner || '/goatfun.png',
+            isLive: true,
+            platform: 'GoatFun',
+            marketCap: Math.floor((m.poolBalance ?? 0) + (m.bullishSupply ?? 0) + (m.fadeSupply ?? 0)),
+            ath: m.creatorRevenue?.totalEarned ?? 0,
+            viewers: m.livestream?.totalViews ?? undefined,
+          }));
+          setStreams(mapped);
+        }
+      });
+    });
+    return () => { socket.disconnect(); };
   }, []);
 
   return (
@@ -44,7 +82,7 @@ export default function LivestreamsContent() {
           ))
         ) : (
           // Show actual livestreams
-          livestreams.map((livestream) => (
+          streams.map((livestream) => (
             <LivestreamCard key={livestream.id} livestream={livestream} />
           ))
         )}

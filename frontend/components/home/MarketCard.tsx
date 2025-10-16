@@ -2,6 +2,7 @@
 
 import type { Market } from '@/lib/data/markets';
 import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 
 interface MarketCardProps {
@@ -32,7 +33,7 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, className = '' }) => {
   };
 
   return (
-    <div className={`
+    <Link href={`/livestreams?marketId=${market.id}`} className={`
       bg-black rounded-lg border border-white/10
       hover:border-white/30 transition-colors cursor-pointer
       ${className}
@@ -75,7 +76,7 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, className = '' }) => {
           </div>
         )}
       </div>
-    </div>
+    </Link>
   );
 };
 

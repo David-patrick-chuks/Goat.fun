@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "nodemon --exec ts-node --transpile-only src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "upload:default-avatar": "ts-node --transpile-only src/scripts/uploadDefaultAvatar.ts"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
@@ -15,6 +16,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "http": "^0.0.1-security",
+    "livekit-server-sdk": "^2.14.0",
     "mongoose": "^8.19.1",
     "socket.io": "^4.8.1",
     "ts-node": "^10.9.2",

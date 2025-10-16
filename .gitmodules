@@ -1,0 +1,6 @@
+[submodule "goated-test/lib/forge-std"]
+	path = goated-test/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "goated-test/lib/openzeppelin-contracts"]
+	path = goated-test/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

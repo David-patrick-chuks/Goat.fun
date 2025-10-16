@@ -12,6 +12,7 @@ const LivestreamSchema = new Schema<LivestreamInfo>({
   isLive: { type: Boolean, default: false },
   streamKey: String,
   playbackUrl: String,
+  roomName: String,
   thumbnail: String,
   totalViews: Number,
   endedAt: Date,

@@ -1,8 +1,10 @@
 "use client";
 
+import { getSocket } from "@/lib/socket";
 import { AlertTriangle, ChevronDown, Image as ImageIcon, Link as LinkIcon } from "lucide-react";
 import NextImage from "next/image";
 import React from "react";
+import { useAccount } from "wagmi";
 
 export default function CreateMarket() {
   const [showSocials, setShowSocials] = React.useState(false);
@@ -14,6 +16,12 @@ export default function CreateMarket() {
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [bannerPreviewUrl, setBannerPreviewUrl] = React.useState<string | null>(null);
   const [durationHours, setDurationHours] = React.useState<6 | 12 | 24 | 72 | null>(null);
+  const [title, setTitle] = React.useState("");
+  const [ticker, setTicker] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [socialLink, setSocialLink] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
+  const { address, isConnected } = useAccount();
 
   // Handle file upload
   const handleFile = (file: File, isBanner = false) => {
@@ -79,6 +87,15 @@ export default function CreateMarket() {
     }
   };
 
+  async function fileToBase64(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    const base64 = btoa(binary);
+    return `data:${file.type};base64,${base64}`;
+  }
+
   return (
     <div className="px-4 py-8">
       <h1 className="text-3xl font-bold text-white mb-6">Create a New Market</h1>
@@ -97,6 +114,8 @@ export default function CreateMarket() {
                   type="text"
                   placeholder="What’s the prediction?"
                   className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
                 <p className="text-white/50 text-xs mt-2">Example: “Will Elon’s tweet about Nigeria reach 50M views in 6 hours?”</p>
               </div>
@@ -106,6 +125,8 @@ export default function CreateMarket() {
                   type="text"
                   placeholder="Short code (3–6 letters)"
                   className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]"
+                  value={ticker}
+                  onChange={(e) => setTicker(e.target.value.toUpperCase())}
                 />
                 <p className="text-white/50 text-xs mt-2">Example: ELONNG</p>
               </div>
@@ -117,6 +138,8 @@ export default function CreateMarket() {
                 rows={5}
                 placeholder="Add a short note or context about your event."
                 className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
             </div>
 
@@ -133,6 +156,7 @@ export default function CreateMarket() {
                 <div className="mt-3 space-y-2">
                   <p className="text-white/60 text-sm">Share the original post or source link for verification.</p>
                   <input type="url" placeholder="Paste source link (Twitter/X, YouTube, or article URL)" className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]" />
+                  <input type="url" placeholder="Paste source link (Twitter/X, YouTube, or article URL)" className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]" value={socialLink} onChange={(e) => setSocialLink(e.target.value)} />
                   <p className="text-white/50 text-xs">Example: Twitter/X link, YouTube video, or article URL.</p>
                 </div>
               )}
@@ -353,8 +377,63 @@ export default function CreateMarket() {
             </div>
 
             <div className="mt-6">
-              <button className="w-full bg-green-300/20 text-green-300 border border-green-300/30 px-6 py-3 rounded-lg font-semibold">
-                Login to create market
+              <button
+                disabled={!isConnected || submitting || !title || !ticker || !durationHours}
+                onClick={async () => {
+                  if (!isConnected || !address) return;
+                  setSubmitting(true);
+                  try {
+                    const socket = getSocket();
+                    let bannerUrl: string | undefined = undefined;
+                    if (bannerFile) {
+                      setSubmitting(true);
+                      const base64 = await fileToBase64(bannerFile);
+                      const res: any = await new Promise((resolve) => {
+                        socket.emit('upload_market_media', { data: base64, filename: bannerFile.name }, (ack: any) => resolve(ack));
+                      });
+                      if (res?.ok) bannerUrl = res.data?.url;
+                    }
+                    let mediaUrl: string | undefined = undefined;
+                    if (uploadedFile) {
+                      setSubmitting(true);
+                      const base64 = await fileToBase64(uploadedFile);
+                      const res: any = await new Promise((resolve) => {
+                        socket.emit('upload_market_media', { data: base64, filename: uploadedFile.name }, (ack: any) => resolve(ack));
+                      });
+                      if (res?.ok) mediaUrl = res.data?.url;
+                    }
+                    await new Promise<void>((resolve, reject) => {
+                      socket.emit(
+                        'create_market',
+                        {
+                          creator: address,
+                          title,
+                          ticker,
+                          description,
+                          media: mediaUrl,
+                          banner: bannerUrl,
+                          socialLinks: socialLink ? [socialLink] : undefined,
+                          durationHours: durationHours!,
+                        },
+                        (res: any) => {
+                          if (res?.ok) return resolve();
+                          reject(new Error(res?.error || 'Failed to create market'));
+                        }
+                      );
+                    });
+                    // Reset form minimal
+                    setTitle(""); setTicker(""); setDescription(""); setSocialLink(""); setDurationHours(null);
+                    setUploadedFile(null); setPreviewUrl(null); setBannerFile(null); setBannerPreviewUrl(null);
+                    alert('Market created');
+                  } catch (e: any) {
+                    alert(e?.message || 'Error creating market');
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+                className="w-full bg-green-300/20 text-green-300 border border-green-300/30 px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isConnected ? (submitting ? 'Creating…' : 'Create market') : 'Login to create market'}
               </button>
             </div>
           </section>

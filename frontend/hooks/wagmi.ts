@@ -1,20 +1,42 @@
 "use client"
 
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { connectorsForWallets, getDefaultConfig } from '@rainbow-me/rainbowkit';
 import {
-  base,
-  sepolia,
+  coinbaseWallet,
+  metaMaskWallet,
+  rainbowWallet,
+  walletConnectWallet,
+} from '@rainbow-me/rainbowkit/wallets';
+
+import {
+  bsc,
+  bscTestnet,
 } from 'wagmi/chains';
 
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Recommended',
+      wallets: [rainbowWallet, metaMaskWallet],
+    },
+    {
+      groupName: 'Others',
+      wallets: [coinbaseWallet, walletConnectWallet],
+    },
+  ],
+  {
+    appName: 'GoatFun',
+    projectId: process.env.NEXT_PUBLIC_PROJECT_ID || '',
+  }
+);
 export const config = getDefaultConfig({
+  connectors,
   appName: 'GoatFun',
-  projectId: 'YOUR_PROJECT_ID',
+  projectId: process.env.NEXT_PUBLIC_PROJECT_ID || '',
   chains: [
     // customChain, // Add your custom chain
-    base,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [sepolia] : []),
-
-    // ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [customChain] : []),
+    bsc,
+    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [bscTestnet] : []),
   ],
   ssr: true,
 });
