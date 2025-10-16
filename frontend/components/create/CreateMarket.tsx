@@ -4,7 +4,7 @@ import { AlertTriangle, ChevronDown, Image as ImageIcon, Link as LinkIcon } from
 import NextImage from "next/image";
 import React from "react";
 
-export default function CreateContent() {
+export default function CreateMarket() {
   const [showSocials, setShowSocials] = React.useState(false);
   const [showBanner, setShowBanner] = React.useState(false);
   const [dragActive, setDragActive] = React.useState(false);
@@ -13,6 +13,7 @@ export default function CreateContent() {
   const [bannerFile, setBannerFile] = React.useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [bannerPreviewUrl, setBannerPreviewUrl] = React.useState<string | null>(null);
+  const [durationHours, setDurationHours] = React.useState<6 | 12 | 24 | 72 | null>(null);
 
   // Handle file upload
   const handleFile = (file: File, isBanner = false) => {
@@ -80,31 +81,33 @@ export default function CreateContent() {
 
   return (
     <div className="px-4 py-8">
-      <h1 className="text-3xl font-bold text-white mb-6">Create new market</h1>
+      <h1 className="text-3xl font-bold text-white mb-6">Create a New Market</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Form */}
         <div className="lg:col-span-2 space-y-6">
           <section className="bg-black border border-white/10 rounded-lg p-6">
-            <h2 className="text-white font-semibold mb-1">Market details</h2>
-            <p className="text-white/60 text-sm mb-6">Choose carefully, these can&apos;t be changed once the market is created</p>
+            <h2 className="text-white font-semibold mb-1">Market Details</h2>
+            <p className="text-white/60 text-sm mb-6">Choose carefully — these can’t be changed after your market goes live.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-white/70 mb-2">Market title</label>
+                <label className="block text-sm text-white/70 mb-2">Market Title</label>
                 <input
                   type="text"
-                  placeholder="Name your market"
+                  placeholder="What’s the prediction?"
                   className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]"
                 />
+                <p className="text-white/50 text-xs mt-2">Example: “Will Elon’s tweet about Nigeria reach 50M views in 6 hours?”</p>
               </div>
               <div>
                 <label className="block text-sm text-white/70 mb-2">Ticker</label>
                 <input
                   type="text"
-                  placeholder="Add a ticker (e.g. ELON50M)"
+                  placeholder="Short code (3–6 letters)"
                   className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]"
                 />
+                <p className="text-white/50 text-xs mt-2">Example: ELONNG</p>
               </div>
             </div>
 
@@ -112,7 +115,7 @@ export default function CreateContent() {
               <label className="block text-sm text-white/70 mb-2">Description <span className="text-white/40">(Optional)</span></label>
               <textarea
                 rows={5}
-                placeholder="Write a short description"
+                placeholder="Add a short note or context about your event."
                 className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]"
               />
             </div>
@@ -123,16 +126,46 @@ export default function CreateContent() {
                 onClick={() => setShowSocials(!showSocials)}
                 className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-4 py-3 text-white/80"
               >
-                <span className="flex items-center gap-2"><LinkIcon className="w-4 h-4" /> Add social links <span className="text-white/40">(Optional)</span></span>
+                <span className="flex items-center gap-2"><LinkIcon className="w-4 h-4" /> Add Social Links <span className="text-white/40">(Optional)</span></span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${showSocials ? "rotate-180" : ""}`} />
               </button>
               {showSocials && (
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input type="url" placeholder="Website URL" className="bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]" />
-                  <input type="url" placeholder="Twitter / X URL" className="bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]" />
-                  <input type="url" placeholder="Telegram URL" className="bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]" />
-                  <input type="url" placeholder="Discord URL" className="bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]" />
+                <div className="mt-3 space-y-2">
+                  <p className="text-white/60 text-sm">Share the original post or source link for verification.</p>
+                  <input type="url" placeholder="Paste source link (Twitter/X, YouTube, or article URL)" className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#ffea00]" />
+                  <p className="text-white/50 text-xs">Example: Twitter/X link, YouTube video, or article URL.</p>
                 </div>
+              )}
+            </div>
+
+            {/* Duration */}
+            <div className="mt-6">
+              <h3 className="text-white font-semibold mb-1">Duration</h3>
+              <p className="text-white/60 text-sm">How long should this market stay open for trading?</p>
+              <p className="text-white/60 text-xs mb-3">Once the timer runs out, trading stops and the market resolves automatically.</p>
+              <p className="text-white/70 text-sm mb-3">Select Duration:</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { label: '⏱️ 6 Hours', hours: 6 as const },
+                  { label: '🕐 12 Hours', hours: 12 as const },
+                  { label: '🕓 24 Hours', hours: 24 as const },
+                  { label: '🕕 3 Days', hours: 72 as const },
+                ].map(({ label, hours }) => {
+                  const selected = durationHours === hours;
+                  return (
+                    <button
+                      key={hours}
+                      type="button"
+                      onClick={() => setDurationHours(hours)}
+                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${selected ? 'border-[#ffea00] bg-[#ffea00]/10 text-white' : 'border-white/20 text-white/80 hover:border-white/40'}`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              {durationHours !== null && (
+                <p className="text-white/60 text-xs mt-2">Selected: {durationHours === 72 ? '3 days' : `${durationHours} hours`}</p>
               )}
             </div>
 
@@ -148,6 +181,10 @@ export default function CreateContent() {
               onDragOver={(e) => handleDrag(e, false)}
               onDrop={(e) => handleDrop(e, false)}
             >
+              <div className="px-4 pt-4">
+                <h3 className="text-white font-semibold">Upload Market Media</h3>
+                <p className="text-white/60 text-sm">Select a video or image to represent your market — or drag & drop it below.</p>
+              </div>
               {uploadedFile && previewUrl ? (
                 <div className="relative">
                   <div className="aspect-square max-h-96 w-full overflow-hidden rounded-lg">
@@ -188,8 +225,8 @@ export default function CreateContent() {
               <div className="w-14 h-14 mx-auto mb-4 bg-white/5 rounded-lg flex items-center justify-center">
                 <ImageIcon className="w-7 h-7 text-[#ffea00]" />
               </div>
-              <p className="text-white mb-1">Select video or image to upload</p>
-              <p className="text-white/60 text-sm mb-4">or drag and drop it here</p>
+              <p className="text-white mb-1">Choose File</p>
+              <p className="text-white/60 text-sm mb-4">🖼️ Images: up to 15 MB (.jpg, .gif, .png recommended) • 🎥 Videos: up to 30 MB (.mp4 recommended)</p>
                   <input
                     type="file"
                     id="file-upload"
@@ -215,18 +252,18 @@ export default function CreateContent() {
                   <span className="text-white">File size and type</span>
                 </div>
                 <ul className="list-disc list-inside text-white/60">
-                  <li>Image - max 15mb. .jpg, .gif or .png recommended</li>
-                  <li>Video - max 30mb. .mp4 recommended</li>
+                  <li>🖼️ Images: up to 15 MB (.jpg, .gif, .png recommended)</li>
+                  <li>🎥 Videos: up to 30 MB (.mp4 recommended)</li>
                 </ul>
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>
-                  <span className="text-white">Resolution and aspect ratio</span>
+                  <span className="text-white">Recommended Format</span>
                 </div>
                 <ul className="list-disc list-inside text-white/60">
-                  <li>Image - min. 1000x1000px, 1:1 square recommended</li>
-                  <li>Video - 16:9 or 9:16, 1080p+ recommended</li>
+                  <li>Image: 1:1 square, at least 1000 × 1000 px</li>
+                  <li>Video: 16:9 or 9:16, 1080p+</li>
                 </ul>
               </div>
             </div>
@@ -237,13 +274,13 @@ export default function CreateContent() {
                 onClick={() => setShowBanner(!showBanner)}
                 className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-4 py-3 text-white/80"
               >
-                <span>Add banner <span className="text-white/40">(Optional)</span></span>
+                <span>Add Banner <span className="text-white/40">(Optional)</span></span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${showBanner ? "rotate-180" : ""}`} />
               </button>
               {showBanner && (
                 <div className="mt-3">
-                  <p className="text-white/70 text-sm mb-3">Upload banner</p>
-                  <p className="text-white/60 text-xs mb-4">This will be shown on the market page in addition to the market image. Images or animated gifs up to 5mb, 3:1 / 1500x500px original. You can only do this when creating the market, and it cannot be changed later.</p>
+                  <p className="text-white/70 text-sm mb-3">Upload a wide banner shown at the top of your market page.</p>
+                  <p className="text-white/60 text-xs mb-4">Max 5 MB, 3:1 / 1500×500 px • Static or animated (.jpg, .png, .gif)</p>
                   
                   <div 
                     className={`border-2 border-dashed rounded-lg transition-colors ${
@@ -312,7 +349,7 @@ export default function CreateContent() {
 
             <div className="mt-6 bg-white/5 border border-white/10 rounded-lg p-4 text-white/70 text-sm flex items-start gap-3">
               <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
-              <span>Market data (social links, banner, etc) can only be added now, and can&apos;t be changed or edited after creation</span>
+              <span>⚠️ Note: Market details, duration, and media can only be added now. Once your market is deployed, they cannot be edited or changed later — so review everything carefully before launching!</span>
             </div>
 
             <div className="mt-6">
