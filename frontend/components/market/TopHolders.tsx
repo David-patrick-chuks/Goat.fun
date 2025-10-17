@@ -1,14 +1,13 @@
 "use client";
 
-import { Clock, TrendingUp, TrendingDown } from "lucide-react";
-import React from "react";
+import { Clock, TrendingDown, TrendingUp } from "lucide-react";
 
 interface Holder {
   wallet: string;
   side: "bullish" | "fade";
   shares: number;
   price: number;
-  timestamp: Date;
+  timestamp: Date | string;
 }
 
 interface TopHoldersProps {
@@ -21,9 +20,10 @@ export default function TopHolders({ holders, className = "" }: TopHoldersProps)
     return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
   };
 
-  const formatTime = (timestamp: Date) => {
+  const formatTime = (timestamp: Date | string) => {
     const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
+    const timestampDate = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+    const diff = now.getTime() - timestampDate.getTime();
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));

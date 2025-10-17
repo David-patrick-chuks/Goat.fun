@@ -34,8 +34,7 @@ export const config = getDefaultConfig({
   appName: 'GoatFun',
   projectId: process.env.NEXT_PUBLIC_PROJECT_ID || '',
   chains: [
-    // customChain, // Add your custom chain
-    bsc,
+    bsc, // Mainnet BSC as primary
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [bscTestnet] : []),
   ],
   ssr: true,

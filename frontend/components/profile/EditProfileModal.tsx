@@ -2,7 +2,7 @@
 
 import { getSocket } from "@/lib/socket";
 import type { Ack } from "@/lib/types";
-import { X, Upload, User, FileText } from "lucide-react";
+import { FileText, Upload, User, X } from "lucide-react";
 import React from "react";
 import { useAccount } from "wagmi";
 
@@ -45,12 +45,14 @@ export default function EditProfileModal({
     try {
       const reader = new FileReader();
       reader.onload = async (e) => {
-        const data = e.target?.result as string;
+        const dataUrl = e.target?.result as string;
+        // Extract base64 data from data URL (remove "data:image/...;base64," prefix)
+        const base64Data = dataUrl.split(',')[1];
         const socket = getSocket();
         
         socket.emit(
           "upload_avatar",
-          { wallet: address, data, filename: file.name },
+          { wallet: address, data: base64Data, filename: file.name },
           (res: Ack<{ url: string }>) => {
             setIsUploading(false);
             if (res?.ok && res.data) {
@@ -108,6 +110,7 @@ export default function EditProfileModal({
             onClick={handleClose}
             disabled={isSaving || isUploading}
             className="text-white/60 hover:text-white disabled:opacity-50"
+            title="Close modal"
           >
             <X size={20} />
           </button>
@@ -147,6 +150,7 @@ export default function EditProfileModal({
               accept="image/*"
               onChange={handleFileUpload}
               className="hidden"
+              title="Select avatar image"
             />
           </div>
 

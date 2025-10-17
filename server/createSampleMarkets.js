@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const { Market } = require('./dist/models/Market.js');
+const dotenv = require('dotenv');
+dotenv.config();
 
 async function createSampleMarkets() {
   try {

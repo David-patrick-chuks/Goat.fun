@@ -389,7 +389,7 @@ export default function CreateMarket() {
                       setSubmitting(true);
                       const base64 = await fileToBase64(bannerFile);
                       const res: any = await new Promise((resolve) => {
-                        socket.emit('upload_market_media', { data: base64, filename: bannerFile.name }, (ack: any) => resolve(ack));
+                        socket.emit('upload_market_media', { data: base64, filename: bannerFile.name, mediaType: 'banner' }, (ack: any) => resolve(ack));
                       });
                       if (res?.ok) bannerUrl = res.data?.url;
                     }
@@ -398,7 +398,7 @@ export default function CreateMarket() {
                       setSubmitting(true);
                       const base64 = await fileToBase64(uploadedFile);
                       const res: any = await new Promise((resolve) => {
-                        socket.emit('upload_market_media', { data: base64, filename: uploadedFile.name }, (ack: any) => resolve(ack));
+                        socket.emit('upload_market_media', { data: base64, filename: uploadedFile.name, mediaType: 'media' }, (ack: any) => resolve(ack));
                       });
                       if (res?.ok) mediaUrl = res.data?.url;
                     }

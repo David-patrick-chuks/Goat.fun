@@ -1,18 +1,17 @@
 "use client";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount } from "wagmi";
+import { config } from "@/hooks/wagmi";
 import { useSidebar } from "@/lib/contexts/SidebarContext";
 import { navigationConfig } from "@/lib/data/navigation";
+import {
+  useAccountModal,
+  useChainModal,
+  useConnectModal,
+} from "@rainbow-me/rainbowkit";
+import { disconnect } from "@wagmi/core";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import {
-  useConnectModal,
-  useAccountModal,
-  useChainModal,
-} from "@rainbow-me/rainbowkit";
-import { disconnect } from "@wagmi/core";
-import { config } from "@/hooks/wagmi";
+import { useAccount } from "wagmi";
 interface TopNavProps {
   className?: string;
 }

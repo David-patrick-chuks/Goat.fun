@@ -16,6 +16,16 @@ export default function MainContent() {
   const [sort, setSort] = React.useState<"newest" | "trending" | "market_cap">("newest");
   const [loading, setLoading] = React.useState<boolean>(false);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = React.useState<string>("");
+
+  // Debounce search query to avoid too many requests
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   React.useEffect(() => {
     const url = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
@@ -23,11 +33,11 @@ export default function MainContent() {
 
     const load = (reset = true) => {
       setLoading(true);
-      socket.emit("get_markets", { page, limit: 12, sort, search: searchQuery }, (res: Ack<BackendMarket[]>) => {
+      socket.emit("get_markets", { page, limit: 12, sort, search: debouncedSearchQuery }, (res: Ack<{ items: BackendMarket[]; total: number; page: number; limit: number }>) => {
         setLoading(false);
-        if (res?.ok && Array.isArray(res.data)) {
+        if (res?.ok && res.data && Array.isArray(res.data.items)) {
         // Map backend market shape to UI Market shape minimally
-          const mapped: Market[] = (res.data as BackendMarket[]).map((m) => ({
+          const mapped: Market[] = res.data.items.map((m) => ({
           id: String(m._id),
           name: m.title,
           ticker: m.ticker,
@@ -46,15 +56,20 @@ export default function MainContent() {
         }));
         setMarkets((prev) => (reset ? mapped : [...prev, ...mapped]));
         setTrending((reset ? mapped.slice(0, 10) : trending));
+        console.log(`Loaded ${mapped.length} markets, total: ${res.data.total}`);
+      } else {
+        console.error('Failed to load markets:', res?.error);
+        setMarkets([]);
+        setTrending([]);
       }
       });
     };
     load(true);
 
     socket.on("market_created", () => {
-      socket.emit("get_markets", { page: 1, limit: 12, sort }, (res: Ack<BackendMarket[]>) => {
-        if (res?.ok && Array.isArray(res.data)) {
-          const mapped: Market[] = (res.data as BackendMarket[]).map((m) => ({
+      socket.emit("get_markets", { page: 1, limit: 12, sort }, (res: Ack<{ items: BackendMarket[]; total: number; page: number; limit: number }>) => {
+        if (res?.ok && res.data && Array.isArray(res.data.items)) {
+          const mapped: Market[] = res.data.items.map((m) => ({
             id: String(m._id),
             name: m.title,
             ticker: m.ticker,
@@ -78,7 +93,7 @@ export default function MainContent() {
     });
 
     return () => { socket.disconnect(); };
-  }, [page, sort, searchQuery]);
+  }, [page, sort, debouncedSearchQuery]);
 
   return (
     <div className="px-4 py-8">
