@@ -4,20 +4,24 @@ export interface ClientEvents {
   user_connect: (data: { wallet: string; username?: string }) => void;
   update_profile: (data: { wallet: string; username?: string; bio?: string; avatarUrl?: string }, ack?: (result: AckResult) => void) => void;
   upload_avatar: (data: { wallet: string; data: string; filename: string }, ack?: (result: AckResult) => void) => void;
+  upload_market_media: (data: { data: string; filename: string }, ack?: (result: AckResult) => void) => void;
   create_market: (data: CreateMarketPayload, ack?: (result: AckResult) => void) => void;
   join_market: (data: JoinMarketPayload, ack?: (result: AckResult) => void) => void;
   start_stream: (data: { marketId: string }, ack?: (result: AckResult) => void) => void;
   stop_stream: (data: { marketId: string }, ack?: (result: AckResult) => void) => void;
   end_market: (data: { marketId: string; finalResult?: Side | "none" }, ack?: (result: AckResult) => void) => void;
-  get_markets: (data: { status?: "active" | "ended" | "cancelled" }, ack?: (result: AckResult) => void) => void;
+  get_markets: (data: { status?: "active" | "ended" | "cancelled"; page?: number; limit?: number; sort?: "newest" | "trending" | "market_cap"; search?: string }, ack?: (result: AckResult) => void) => void;
   get_user: (data: { wallet: string }, ack?: (result: AckResult) => void) => void;
   get_market_detail: (data: { marketId: string }, ack?: (result: AckResult) => void) => void;
+  chat_message: (data: { marketId: string; wallet: string; message: string }, ack?: (result: AckResult) => void) => void;
+  get_chat: (data: { marketId: string; limit?: number }, ack?: (result: AckResult) => void) => void;
 }
 
 export interface ServerEvents {
   market_update: (data: MarketUpdateEvent) => void;
   market_created: (data: { marketId: string }) => void;
   stream_update: (data: { marketId: string; isLive: boolean }) => void;
+  chat_message: (data: { marketId: string; wallet: string; message: string; at: string }) => void;
 }
 
 export interface AckResult {

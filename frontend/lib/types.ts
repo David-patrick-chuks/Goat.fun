@@ -15,7 +15,14 @@ export type BackendMarket = {
   bullishSupply?: number;
   fadeSupply?: number;
   description?: string;
-  livestream?: { isLive: boolean; totalViews?: number };
+  status?: "active" | "ended" | "cancelled";
+  livestream?: { 
+    isLive: boolean; 
+    totalViews?: number;
+    streamKey?: string;
+    playbackUrl?: string;
+    roomName?: string;
+  };
   creatorRevenue?: { totalEarned?: number };
 };
 

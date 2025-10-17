@@ -13,6 +13,12 @@ export interface Market {
   priceChange: number;
   description?: string;
   replies?: number;
+  livestream?: {
+    isLive: boolean;
+    streamKey?: string;
+    playbackUrl?: string;
+    roomName?: string;
+  };
 }
 
 export const trendingMarkets: Market[] = [

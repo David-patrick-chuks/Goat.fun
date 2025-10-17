@@ -7,7 +7,7 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const uploadService_1 = require("../services/uploadService");
 async function main() {
-    const localPath = path_1.default.resolve(path_1.default.join(__dirname, "..", "GOATavatar.png"));
+    const localPath = path_1.default.resolve(path_1.default.join(__dirname, "..", "GOATFUNavatar.png"));
     if (!fs_1.default.existsSync(localPath)) {
         throw new Error(`Default avatar not found at ${localPath}`);
     }

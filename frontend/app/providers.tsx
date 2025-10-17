@@ -16,6 +16,7 @@ function useSocketInit(): void {
   const { address, isConnected } = useAccount();
   useEffect(() => {
     const socket = getSocket();
+    // Always connect to socket, but only emit user_connect if wallet is connected
     if (isConnected && address) {
       socket.emit(
         "user_connect",

@@ -10,14 +10,11 @@ const env_1 = require("../config/env");
 function sanitizeMongoUri(uri) {
     try {
         if (uri.startsWith("mongodb+srv://")) {
-            // mongodb+srv URIs must not include an explicit port in the hostname
-            // Strip any ":<port>" that appears before the first "/" path separator
             const protocol = "mongodb+srv://";
             const rest = uri.slice(protocol.length);
             const slashIndex = rest.indexOf("/");
             const hostPart = slashIndex === -1 ? rest : rest.slice(0, slashIndex);
             const pathPart = slashIndex === -1 ? "" : rest.slice(slashIndex);
-            // If hostPart contains a colon followed by digits, remove the port
             const sanitizedHost = hostPart.replace(/:(\d+)$/, "");
             return protocol + sanitizedHost + pathPart;
         }
@@ -36,6 +33,8 @@ async function connectMongo() {
     };
     const uri = sanitizeMongoUri(env_1.env.MONGO_URI);
     await mongoose_1.default.connect(uri, options);
+    const { host, name } = mongoose_1.default.connection;
+    console.log(`[db] connected host=${host} db=${name}`);
 }
 async function disconnectMongo() {
     if (mongoose_1.default.connection.readyState !== 0) {

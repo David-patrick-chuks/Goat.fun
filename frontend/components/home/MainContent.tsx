@@ -4,11 +4,10 @@ import FilterSection from "@/components/home/FilterSection";
 import MarketCard from "@/components/home/MarketCard";
 import SearchSection from "@/components/home/SearchSection";
 import TrendingSection from "@/components/home/TrendingSection";
+import type { Market } from "@/lib/data/markets";
+import type { Ack, BackendMarket } from "@/lib/types";
 import React from "react";
 import { io, Socket } from "socket.io-client";
-import type { Ack } from "@/lib/types";
-import type { BackendMarket } from "@/lib/types";
-import type { Market } from "@/lib/data/markets";
 
 export default function MainContent() {
   const [markets, setMarkets] = React.useState<Market[]>([]);
@@ -16,6 +15,7 @@ export default function MainContent() {
   const [page, setPage] = React.useState<number>(1);
   const [sort, setSort] = React.useState<"newest" | "trending" | "market_cap">("newest");
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = React.useState<string>("");
 
   React.useEffect(() => {
     const url = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
@@ -23,7 +23,7 @@ export default function MainContent() {
 
     const load = (reset = true) => {
       setLoading(true);
-      socket.emit("get_markets", { page, limit: 12, sort }, (res: Ack<BackendMarket[]>) => {
+      socket.emit("get_markets", { page, limit: 12, sort, search: searchQuery }, (res: Ack<BackendMarket[]>) => {
         setLoading(false);
         if (res?.ok && Array.isArray(res.data)) {
         // Map backend market shape to UI Market shape minimally
@@ -37,6 +37,12 @@ export default function MainContent() {
           marketCap: Math.floor((m.poolBalance ?? 0) + (m.bullishSupply ?? 0) + (m.fadeSupply ?? 0)),
           priceChange: 0,
           description: m.description,
+          livestream: m.livestream ? {
+            isLive: m.livestream.isLive,
+            streamKey: m.livestream.streamKey,
+            playbackUrl: m.livestream.playbackUrl,
+            roomName: m.livestream.roomName
+          } : undefined
         }));
         setMarkets((prev) => (reset ? mapped : [...prev, ...mapped]));
         setTrending((reset ? mapped.slice(0, 10) : trending));
@@ -58,6 +64,12 @@ export default function MainContent() {
             marketCap: Math.floor((m.poolBalance ?? 0) + (m.bullishSupply ?? 0) + (m.fadeSupply ?? 0)),
             priceChange: 0,
             description: m.description,
+            livestream: m.livestream ? {
+              isLive: m.livestream.isLive,
+              streamKey: m.livestream.streamKey,
+              playbackUrl: m.livestream.playbackUrl,
+              roomName: m.livestream.roomName
+            } : undefined
           }));
           setMarkets(mapped);
           setTrending(mapped.slice(0, 10));
@@ -66,17 +78,19 @@ export default function MainContent() {
     });
 
     return () => { socket.disconnect(); };
-  }, [page, sort]);
+  }, [page, sort, searchQuery]);
 
   return (
     <div className="px-4 py-8">
-      <SearchSection />
+      <SearchSection onSearch={setSearchQuery} />
       <TrendingSection markets={trending} />
       
       <FilterSection />
       
       <div className="flex items-center justify-between mb-4">
-        <div className="text-white/70 text-sm">Sort:</div>
+        <div className="text-white/70 text-sm">
+          {searchQuery ? `Search results for "${searchQuery}" (${markets.length} markets)` : `Sort:`}
+        </div>
         <div className="flex gap-2">
           {(["newest","trending","market_cap"] as const).map((s) => (
             <button key={s} onClick={() => { setPage(1); setSort(s); }} className={`px-3 py-1 rounded border text-xs ${sort===s?"border-[#ffea00] text-white":"border-white/20 text-white/70"}`}>{s}</button>
@@ -90,9 +104,17 @@ export default function MainContent() {
         ))}
       </div>
 
-      <div className="flex justify-center mt-6">
-        <button disabled={loading} onClick={() => setPage((p) => p + 1)} className="px-4 py-2 rounded border border-white/20 text-white/80 disabled:opacity-50">{loading?"Loading…":"Load more"}</button>
-      </div>
+      {markets.length === 0 && searchQuery && (
+        <div className="text-center text-white/60 py-8">
+          No markets found for "{searchQuery}"
+        </div>
+      )}
+
+      {!searchQuery && (
+        <div className="flex justify-center mt-6">
+          <button disabled={loading} onClick={() => setPage((p) => p + 1)} className="px-4 py-2 rounded border border-white/20 text-white/80 disabled:opacity-50">{loading?"Loading…":"Load more"}</button>
+        </div>
+      )}
     </div>
   );
 }

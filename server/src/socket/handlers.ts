@@ -2,6 +2,7 @@ import { Server, Socket } from "socket.io";
 import { ChatMessage } from "../models/Chat";
 import { User } from "../models/User";
 import { createMarket, endMarket, getMarketDetail, joinMarket } from "../services/marketService";
+import { createLiveKitRoom } from "../services/streamService";
 import { uploadAvatarFromBuffer, uploadMarketMediaFromBuffer } from "../services/uploadService";
 import type { AckResult, ClientEvents, CreateMarketPayload, JoinMarketPayload, ServerEvents } from "../types/socket";
 import { usernameFromWallet } from "../utils/user";
@@ -26,8 +27,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         { upsert: true }
       );
       ack?.({ ok: true });
+      console.log(`[socket] user_connect success for wallet: ${wallet}`);
       } catch (err) {
         const e = err as Error;
+        console.error(`[socket] user_connect error for wallet: ${wallet}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }
@@ -43,8 +46,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
       try {
         const user = await User.findOne({ wallet }).lean();
         ack?.({ ok: true, data: user ?? null });
+        console.log(`[socket] get_user success for wallet: ${wallet}`);
       } catch (err) {
         const e = err as Error;
+        console.error(`[socket] get_user error for wallet: ${wallet}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }
@@ -62,8 +67,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         const upload = await uploadAvatarFromBuffer(buffer, filename);
         await User.updateOne({ wallet }, { $set: { avatarUrl: upload.secure_url } });
         ack?.({ ok: true, data: { url: upload.secure_url } });
+        console.log(`[socket] upload_avatar success for wallet: ${wallet}, url: ${upload.secure_url}`);
       } catch (err) {
         const e = err as Error;
+        console.error(`[socket] upload_avatar error for wallet: ${wallet}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }
@@ -81,8 +88,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         const buffer = Buffer.from(payload, "base64");
         const upload = await uploadMarketMediaFromBuffer(buffer, filename);
         ack?.({ ok: true, data: { url: upload.secure_url } });
+        console.log(`[socket] upload_market_media success for file: ${filename}, url: ${upload.secure_url}`);
       } catch (err) {
         const e = err as Error;
+        console.error(`[socket] upload_market_media error for file: ${filename}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }
@@ -98,8 +107,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         const nextUsername = username ?? usernameFromWallet(wallet);
         await User.updateOne({ wallet }, { $set: { username: nextUsername, bio, avatarUrl } }, { upsert: true });
         ack?.({ ok: true });
+        console.log(`[socket] update_profile success for wallet: ${wallet}, username: ${nextUsername}`);
       } catch (err) {
         const e = err as Error;
+        console.error(`[socket] update_profile error for wallet: ${wallet}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }
@@ -111,8 +122,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
       socket.join(String(market._id));
       io.emit("market_created", { marketId: String(market._id) });
       ack?.({ ok: true, data: { marketId: String(market._id) } });
+      console.log(`[socket] create_market success for creator: ${data.creator}, marketId: ${market._id}, title: ${data.title}`);
     } catch (err) {
       const e = err as Error;
+      console.error(`[socket] create_market error for creator: ${data.creator}, title: ${data.title}`, e.message);
       ack?.({ ok: false, error: e.message });
     }
   });
@@ -129,8 +142,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         poolBalance: market.poolBalance,
       });
       ack?.({ ok: true });
+      console.log(`[socket] join_market success for wallet: ${data.wallet}, marketId: ${data.marketId}, side: ${data.side}, shares: ${data.shares}`);
     } catch (err) {
       const e = err as Error;
+      console.error(`[socket] join_market error for wallet: ${data.wallet}, marketId: ${data.marketId}`, e.message);
       ack?.({ ok: false, error: e.message });
     }
   });
@@ -147,8 +162,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         const saved = await ChatMessage.create({ marketId, wallet, message, at: new Date() });
         io.to(marketId).emit("chat_message", { marketId, wallet, message, at: saved.at.toISOString() });
         ack?.({ ok: true });
+        console.log(`[socket] chat_message success for marketId: ${marketId}, wallet: ${wallet}, message: ${message.substring(0, 50)}...`);
       } catch (err) {
         const e = err as Error;
+        console.error(`[socket] chat_message error for marketId: ${marketId}, wallet: ${wallet}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }
@@ -164,8 +181,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         const lim = Math.min(200, Math.max(1, limit ?? 50));
         const items = await ChatMessage.find({ marketId }).sort({ at: -1 }).limit(lim).lean();
         ack?.({ ok: true, data: items.reverse() });
+        console.log(`[socket] get_chat success for marketId: ${marketId}, returned ${items.length} messages`);
       } catch (err) {
         const e = err as Error;
+        console.error(`[socket] get_chat error for marketId: ${marketId}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }
@@ -184,7 +203,7 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
       // Create LiveKit room and access token
       const livekitRoom = await createLiveKitRoom(marketId, market.creator);
       
-      const updated = await (await import("../models/Market.js")).Market.findByIdAndUpdate(
+      await (await import("../models/Market")).Market.findByIdAndUpdate(
         marketId,
         { 
           $set: { 
@@ -203,8 +222,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         wsUrl: livekitRoom.wsUrl,
         roomName: livekitRoom.roomName
       } });
+      console.log(`[socket] start_stream success for marketId: ${marketId}, roomName: ${livekitRoom.roomName}`);
     } catch (err) {
       const e = err as Error;
+      console.error(`[socket] start_stream error for marketId: ${marketId}`, e.message);
       ack?.({ ok: false, error: e.message });
     }
     }
@@ -217,13 +238,15 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
       ack?: (result: AckResult) => void
     ) => {
     try {
-      await (await import("../models/Market.js")).Market.findByIdAndUpdate(marketId, { $set: { "livestream.isLive": false, "livestream.endedAt": new Date() } });
+      await (await import("../models/Market")).Market.findByIdAndUpdate(marketId, { $set: { "livestream.isLive": false, "livestream.endedAt": new Date() } });
       // Purge chat for this market after ending stream
       await ChatMessage.deleteMany({ marketId });
       io.to(marketId).emit("stream_update", { marketId, isLive: false });
       ack?.({ ok: true });
+      console.log(`[socket] stop_stream success for marketId: ${marketId}, chat purged`);
     } catch (err) {
       const e = err as Error;
+      console.error(`[socket] stop_stream error for marketId: ${marketId}`, e.message);
       ack?.({ ok: false, error: e.message });
     }
     }
@@ -246,8 +269,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         poolBalance: market.poolBalance,
       });
       ack?.({ ok: true });
+      console.log(`[socket] end_market success for marketId: ${marketId}, finalResult: ${finalResult}`);
     } catch (err) {
       const e = err as Error;
+      console.error(`[socket] end_market error for marketId: ${marketId}`, e.message);
       ack?.({ ok: false, error: e.message });
     }
     }
@@ -256,7 +281,7 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
   socket.on(
     "get_markets",
     async (
-      payload: { status?: "active" | "ended" | "cancelled"; page?: number; limit?: number; sort?: "newest" | "trending" | "market_cap" },
+      payload: { status?: "active" | "ended" | "cancelled"; page?: number; limit?: number; sort?: "newest" | "trending" | "market_cap"; search?: string },
       ack?: (result: AckResult) => void
     ) => {
       try {
@@ -264,8 +289,20 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
         const limit = Math.min(50, Math.max(1, payload?.limit ?? 20));
         const status = payload?.status ?? "active";
         const sortKey = payload?.sort ?? "newest";
+        const searchQuery = payload?.search?.trim();
 
         const query: Record<string, unknown> = { status };
+        
+        // Add search functionality
+        if (searchQuery) {
+          query.$or = [
+            { title: { $regex: searchQuery, $options: 'i' } },
+            { ticker: { $regex: searchQuery, $options: 'i' } },
+            { description: { $regex: searchQuery, $options: 'i' } },
+            { creator: { $regex: searchQuery, $options: 'i' } }
+          ];
+        }
+
         let sort: Record<string, 1 | -1>;
         if (sortKey === "market_cap") sort = { poolBalance: -1 };
         else if (sortKey === "trending") sort = { bullishSupply: -1, fadeSupply: -1 };
@@ -278,8 +315,10 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
           .limit(limit)
           .lean();
         ack?.({ ok: true, data });
+        console.log(`[socket] get_markets success - page: ${page}, limit: ${limit}, status: ${status}, sort: ${sortKey}, search: "${searchQuery || 'none'}", returned: ${data.length} markets`);
       } catch (err) {
         const e = err as Error;
+        console.error(`[socket] get_markets error - page: ${payload?.page || 1}, status: ${payload?.status || 'active'}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }
@@ -294,15 +333,13 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
     try {
       const market = await getMarketDetail(marketId);
       ack?.({ ok: true, data: market });
+      console.log(`[socket] get_market_detail success for marketId: ${marketId}, title: ${market?.title || 'N/A'}`);
     } catch (err) {
       const e = err as Error;
+      console.error(`[socket] get_market_detail error for marketId: ${marketId}`, e.message);
       ack?.({ ok: false, error: e.message });
     }
     }
   );
-}
-
-function cryptoRandomKey(): string {
-  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
 

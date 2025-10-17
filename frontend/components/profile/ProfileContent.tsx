@@ -1,9 +1,10 @@
 "use client";
 
 import { getSocket } from "@/lib/socket";
-import React from "react";
 import type { Ack } from "@/lib/types";
+import React from "react";
 import { useAccount } from "wagmi";
+import EditProfileModal from "./EditProfileModal";
 
 export default function ProfileContent() {
   const { address, isConnected } = useAccount();
@@ -13,6 +14,7 @@ export default function ProfileContent() {
   const [followers, setFollowers] = React.useState<number>(0);
   const [following, setFollowing] = React.useState<number>(0);
   const [createdMarkets, setCreatedMarkets] = React.useState<number>(0);
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!isConnected || !address) return;
@@ -61,16 +63,7 @@ export default function ProfileContent() {
           </div>
         </div>
         <button
-          onClick={() => {
-            const nextUsername = prompt('Username', username || '') || username;
-            const nextBio = prompt('Bio', bio || '') || bio;
-            if (!address) return;
-            const socket = getSocket();
-            socket.emit('update_profile', { wallet: address, username: nextUsername, bio: nextBio }, (res: Ack) => {
-              if (res?.ok) { setUsername(nextUsername); setBio(nextBio); }
-              else alert(res?.error || 'Failed to update');
-            });
-          }}
+          onClick={() => setIsEditModalOpen(true)}
           className="bg-[#2f3a4d] hover:bg-[#38475f] text-white px-4 py-2 rounded-md text-sm font-medium"
         >
           edit
@@ -147,6 +140,20 @@ export default function ProfileContent() {
         </div>
         <a href="#" className="hover:text-white">Report</a>
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        currentUsername={username}
+        currentBio={bio}
+        currentAvatarUrl={avatarUrl}
+        onUpdate={(newUsername, newBio, newAvatarUrl) => {
+          setUsername(newUsername);
+          setBio(newBio);
+          setAvatarUrl(newAvatarUrl);
+        }}
+      />
     </div>
   );
 }

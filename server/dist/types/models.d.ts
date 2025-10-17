@@ -24,6 +24,7 @@ export interface LivestreamInfo {
     isLive: boolean;
     streamKey?: string;
     playbackUrl?: string;
+    roomName?: string;
     thumbnail?: string;
     totalViews?: number;
     endedAt?: Date;
