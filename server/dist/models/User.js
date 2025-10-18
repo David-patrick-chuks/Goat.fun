@@ -47,6 +47,8 @@ const UserSchema = new mongoose_1.Schema({
     followers: { type: [FollowSchema], default: [] },
     following: { type: [FollowSchema], default: [] },
     createdMarkets: { type: [String], default: [] },
+    lastSeen: { type: Date, default: () => new Date() },
+    isOnline: { type: Boolean, default: false },
     createdAt: { type: Date, default: () => new Date() },
 });
 exports.User = mongoose_1.default.models.User || mongoose_1.default.model("User", UserSchema);

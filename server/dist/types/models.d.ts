@@ -12,6 +12,8 @@ export interface UserDoc extends Document {
     followers: FollowInfo[];
     following: FollowInfo[];
     createdMarkets: string[];
+    lastSeen: Date;
+    isOnline: boolean;
     createdAt: Date;
 }
 export interface BuyerInfo {

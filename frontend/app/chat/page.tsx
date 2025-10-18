@@ -1,7 +1,7 @@
 "use client";
 
-import ChatContent from "@/components/chat/ChatContent";
+import ChatPage from "@/components/chat/ChatPage";
 
-export default function ChatPage() {
-  return <ChatContent />;
+export default function Chat() {
+  return <ChatPage />;
 }

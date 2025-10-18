@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import type { ClientEvents, ServerEvents } from "../../types/socket";
-import { registerChatHandlers } from "./chatHandlers";
+import { registerMessagingHandlers } from "./chatHandlers";
 import { registerCommentHandlers } from "./commentHandlers";
 import { registerMarketHandlers } from "./marketHandlers";
 import { registerStreamingHandlers } from "./streamingHandlers";
@@ -18,7 +18,7 @@ export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, s
 
   // Register all handler modules
   registerMarketHandlers(io, socket);
-  registerChatHandlers(io, socket);
+  registerMessagingHandlers(io, socket);
   registerCommentHandlers(io, socket);
   registerTradingHandlers(io, socket);
   registerStreamingHandlers(io, socket);

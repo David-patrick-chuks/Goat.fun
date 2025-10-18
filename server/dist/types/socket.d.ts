@@ -90,6 +90,68 @@ export interface ClientEvents {
         marketId: string;
         limit?: number;
     }, ack?: (result: AckResult) => void) => void;
+    add_comment: (data: {
+        marketId: string;
+        wallet: string;
+        message?: string;
+        imageData?: string;
+        filename?: string;
+    }, ack?: (result: AckResult) => void) => void;
+    get_comments: (data: {
+        marketId: string;
+        limit?: number;
+        page?: number;
+    }, ack?: (result: AckResult) => void) => void;
+    create_conversation: (data: {
+        participants: string[];
+        type: 'direct' | 'group';
+        name?: string;
+        description?: string;
+    }, ack?: (result: AckResult) => void) => void;
+    get_conversations: (data: {
+        wallet: string;
+        limit?: number;
+        page?: number;
+    }, ack?: (result: AckResult) => void) => void;
+    send_message: (data: {
+        conversationId: string;
+        sender: string;
+        type: 'text' | 'image' | 'market' | 'user' | 'gif' | 'emoji';
+        content?: string;
+        imageData?: string;
+        filename?: string;
+        marketId?: string;
+        userId?: string;
+        gifUrl?: string;
+        emoji?: string;
+        replyTo?: string;
+    }, ack?: (result: AckResult) => void) => void;
+    get_messages: (data: {
+        conversationId: string;
+        limit?: number;
+        page?: number;
+    }, ack?: (result: AckResult) => void) => void;
+    search_users: (data: {
+        query: string;
+        limit?: number;
+    }, ack?: (result: AckResult) => void) => void;
+    follow_user: (data: {
+        follower: string;
+        following: string;
+    }, ack?: (result: AckResult) => void) => void;
+    unfollow_user: (data: {
+        follower: string;
+        following: string;
+    }, ack?: (result: AckResult) => void) => void;
+    get_following: (data: {
+        wallet: string;
+    }, ack?: (result: AckResult) => void) => void;
+    get_followers: (data: {
+        wallet: string;
+    }, ack?: (result: AckResult) => void) => void;
+    update_last_seen: (data: {
+        wallet: string;
+    }, ack?: (result: AckResult) => void) => void;
     webrtc_offer: (data: {
         marketId: string;
         fromWallet: string;
@@ -139,6 +201,47 @@ export interface ServerEvents {
     join_request_accepted: (data: {
         marketId: string;
         streamerWallet: string;
+    }) => void;
+    comment_added: (data: {
+        marketId: string;
+        wallet: string;
+        message?: string;
+        imageUrl?: string;
+        createdAt: string;
+    }) => void;
+    message_sent: (data: {
+        conversationId: string;
+        message: {
+            _id: string;
+            sender: string;
+            type: string;
+            content?: string;
+            imageUrl?: string;
+            marketId?: string;
+            userId?: string;
+            gifUrl?: string;
+            emoji?: string;
+            replyTo?: string;
+            createdAt: string;
+        };
+    }) => void;
+    conversation_created: (data: {
+        conversation: {
+            _id: string;
+            participants: string[];
+            type: string;
+            name?: string;
+            description?: string;
+            createdAt: string;
+        };
+    }) => void;
+    user_online: (data: {
+        wallet: string;
+        isOnline: boolean;
+    }) => void;
+    user_last_seen: (data: {
+        wallet: string;
+        lastSeen: string;
     }) => void;
     webrtc_offer: (data: {
         marketId: string;

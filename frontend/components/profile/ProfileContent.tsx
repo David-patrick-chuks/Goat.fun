@@ -293,31 +293,31 @@ export default function ProfileContent() {
         <div className="text-center py-8">
           <p className="text-white/60 mb-4">No tokens in wallet</p>
           <p className="text-white/40 text-sm">Buy shares in markets to see tokens here</p>
-        </div>
+      </div>
       ) : (
         <>
-          <table className="min-w-full text-left text-sm">
-            <thead className="text-white/60">
-              <tr>
-                <th className="py-3 pr-4">Coins</th>
-                <th className="py-3 pr-4">MCap</th>
-                <th className="py-3 pr-4">Value</th>
-              </tr>
-            </thead>
-            <tbody className="text-white/80">
-              <tr className="border-t border-white/10">
-                <td className="py-4 pr-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-cyan-400" />
-                    <div>
-                      <div className="text-white">Solana balance</div>
-                      <div className="text-white/50 text-[11px]">0.0000 SOL</div>
-                    </div>
+        <table className="min-w-full text-left text-sm">
+          <thead className="text-white/60">
+            <tr>
+              <th className="py-3 pr-4">Coins</th>
+              <th className="py-3 pr-4">MCap</th>
+              <th className="py-3 pr-4">Value</th>
+            </tr>
+          </thead>
+          <tbody className="text-white/80">
+            <tr className="border-t border-white/10">
+              <td className="py-4 pr-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-cyan-400" />
+                  <div>
+                    <div className="text-white">Solana balance</div>
+                    <div className="text-white/50 text-[11px]">0.0000 SOL</div>
                   </div>
-                </td>
-                <td className="py-4 pr-4 text-white/60">—</td>
-                <td className="py-4 pr-4 font-semibold">$0</td>
-              </tr>
+                </div>
+              </td>
+              <td className="py-4 pr-4 text-white/60">—</td>
+              <td className="py-4 pr-4 font-semibold">$0</td>
+            </tr>
               {walletTokens.map((token) => (
                 <tr key={token._id} className="border-t border-white/10">
                   <td className="py-4 pr-4">
@@ -421,8 +421,8 @@ export default function ProfileContent() {
                     <td className="py-4 pr-4 font-semibold">{formatPrice(market.poolBalance)}</td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
+          </tbody>
+        </table>
             <div className="flex items-center justify-center gap-2 mt-4">
               <button 
                 onClick={() => setMarketsPage(Math.max(1, marketsPage - 1))}
@@ -767,16 +767,16 @@ export default function ProfileContent() {
           {activeTab === "notification" && renderNotificationsTab()}
           {activeTab === "followers" && renderFollowersTab()}
           {activeTab === "following" && renderFollowingTab()}
-        </div>
+      </div>
 
-        {/* Footer */}
-        <div className="mt-10 text-white/50 text-sm flex items-center justify-between">
-          <div className="flex flex-wrap gap-3 items-center">
+      {/* Footer */}
+      <div className="mt-10 text-white/50 text-sm flex items-center justify-between">
+        <div className="flex flex-wrap gap-3 items-center">
             <span>© goat.fun 2025</span>
             <a href="/privacy-policy" className="hover:text-white">Privacy policy</a>
-            <span>|</span>
+          <span>|</span>
             <a href="/terms-of-service" className="hover:text-white">Terms of service</a>
-            <span>|</span>
+          <span>|</span>
             <a href="/support" className="hover:text-white">Support</a>
           </div>
           <a href="/report" className="hover:text-white">Report</a>
@@ -853,8 +853,8 @@ export default function ProfileContent() {
                 ))}
               </div>
             )}
-          </div>
         </div>
+      </div>
       </div>
 
       {/* Edit Profile Modal */}

@@ -14,6 +14,8 @@ const UserSchema = new Schema<UserDoc>({
   followers: { type: [FollowSchema], default: [] },
   following: { type: [FollowSchema], default: [] },
   createdMarkets: { type: [String], default: [] },
+  lastSeen: { type: Date, default: () => new Date() },
+  isOnline: { type: Boolean, default: false },
   createdAt: { type: Date, default: () => new Date() },
 });
 

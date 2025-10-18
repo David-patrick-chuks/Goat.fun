@@ -1,11 +1,11 @@
 "use client";
 
 import type { Livestream } from '@/lib/data/livestreams';
+import type { Ack, BackendMarket } from '@/lib/types';
 import React from 'react';
+import { io, Socket } from 'socket.io-client';
 import LivestreamCard from './LivestreamCard';
 import LivestreamSkeleton from './LivestreamSkeleton';
-import { io, Socket } from 'socket.io-client';
-import type { Ack, BackendMarket } from '@/lib/types';
 
 export default function LivestreamsContent() {
   const [includeNSFW, setIncludeNSFW] = React.useState(true);
