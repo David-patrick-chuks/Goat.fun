@@ -42,10 +42,15 @@ export default function TopHolders({ holders, className = "" }: TopHoldersProps)
 
   return (
     <div className={`bg-black border border-white/10 rounded-lg p-4 ${className}`}>
-      <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-        <TrendingUp size={16} />
-        Top Holders
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-white font-semibold flex items-center gap-2">
+          <TrendingUp size={16} />
+          Top Holders
+        </h3>
+        <button className="px-3 py-1 bg-white/5 text-white/60 text-xs rounded hover:text-white">
+          Generate bubble map
+        </button>
+      </div>
       
       {holders.length === 0 ? (
         <div className="text-white/60 text-sm text-center py-4">
@@ -53,8 +58,8 @@ export default function TopHolders({ holders, className = "" }: TopHoldersProps)
         </div>
       ) : (
         <div className="space-y-3">
-          {holders.slice(0, 10).map((holder, index) => (
-            <div key={`${holder.wallet}-${holder.timestamp.getTime()}`} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+          {holders.slice(0, 5).map((holder, index) => (
+            <div key={`${holder.wallet}-${typeof holder.timestamp === 'string' ? holder.timestamp : holder.timestamp.getTime()}`} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white/80 text-sm font-medium">
                   {index + 1}
@@ -77,10 +82,10 @@ export default function TopHolders({ holders, className = "" }: TopHoldersProps)
                   ) : (
                     <TrendingDown size={14} />
                   )}
-                  {formatShares(holder.shares)} shares
+                  {formatShares(holder.shares)}
                 </div>
                 <div className="text-xs text-white/60">
-                  @ ${holder.price.toFixed(2)}
+                  {((holder.shares * holder.price) / 1000000).toFixed(2)}%
                 </div>
               </div>
             </div>

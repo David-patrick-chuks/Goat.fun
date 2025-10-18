@@ -26,4 +26,32 @@ export type BackendMarket = {
   creatorRevenue?: { totalEarned?: number };
 };
 
+// WebRTC Types
+export interface WebRTCOffer {
+  marketId: string;
+  fromWallet: string;
+  toWallet: string;
+  offer: RTCSessionDescriptionInit;
+}
+
+export interface WebRTCAnswer {
+  marketId: string;
+  fromWallet: string;
+  toWallet: string;
+  answer: RTCSessionDescriptionInit;
+}
+
+export interface WebRTCIceCandidate {
+  marketId: string;
+  fromWallet: string;
+  toWallet: string;
+  candidate: RTCIceCandidateInit;
+}
+
+export interface WebRTCViewerEvent {
+  marketId: string;
+  viewerWallet: string;
+  viewerCount: number;
+}
+
 

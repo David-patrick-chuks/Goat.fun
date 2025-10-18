@@ -3,7 +3,7 @@ import { Trade } from "../../models/Trade";
 import { PriceHistory } from "../../models/PriceHistory";
 import type { AckResult, ClientEvents, ServerEvents } from "../../types/socket";
 
-export function registerTradingHandlers(io: Server<ClientEvents, ServerEvents>, socket: Socket<ClientEvents, ServerEvents>): void {
+export function registerTradingHandlers(_io: Server<ClientEvents, ServerEvents>, socket: Socket<ClientEvents, ServerEvents>): void {
   socket.on(
     "buy_shares",
     async (

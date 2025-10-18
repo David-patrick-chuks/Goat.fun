@@ -78,12 +78,12 @@ export function registerMarketHandlers(io: Server<ClientEvents, ServerEvents>, s
   socket.on("create_market", async (data: CreateMarketPayload, ack?: (result: AckResult) => void) => {
     try {
       const market = await createMarket(data);
-      io.emit("market_created", { marketId: market._id.toString() });
+      io.emit("market_created", { marketId: (market._id as any).toString() });
       ack?.({ ok: true, data: market });
-      console.log(`[socket] create_market success for wallet: ${data.wallet}, title: ${data.title}`);
+      console.log(`[socket] create_market success for wallet: ${data.creator}, title: ${data.title}`);
     } catch (err) {
       const e = err as Error;
-      console.error(`[socket] create_market error for wallet: ${data.wallet}`, e.message);
+      console.error(`[socket] create_market error for wallet: ${data.creator}`, e.message);
       ack?.({ ok: false, error: e.message });
     }
   });

@@ -7,11 +7,12 @@ import React from "react";
 import { useAccount } from "wagmi";
 
 // Import components
+import CommentsSection from "../market/CommentsSection";
 import PriceChart from "../market/PriceChart";
 import TopHolders from "../market/TopHolders";
 import JoinRequests from "./JoinRequests";
 import PublicChat from "./PublicChat";
-import StreamControls, { StreamVideoControls } from "./StreamControls";
+import StreamControls from "./StreamControls";
 import StreamPlayer from "./StreamPlayer";
 import TradingSection from "./TradingSection";
 
@@ -28,6 +29,7 @@ export default function MarketDetails() {
   const [chat, setChat] = React.useState<{ wallet: string; message: string; at: string }[]>([]);
   const [input, setInput] = React.useState("");
   const [isStreaming, setIsStreaming] = React.useState(false);
+  const [isStopping, setIsStopping] = React.useState(false);
   const [joinRequests, setJoinRequests] = React.useState<{ wallet: string; timestamp: Date }[]>([]);
   const [buyAmount, setBuyAmount] = React.useState<string>('');
   const [selectedSide, setSelectedSide] = React.useState<'bullish' | 'fade' | null>(null);
@@ -36,18 +38,7 @@ export default function MarketDetails() {
   // Refs
   const videoElementRef = React.useRef<HTMLVideoElement>(null);
 
-  // Custom hooks
-  const {
-    localStream,
-    isMuted,
-    isCameraOff,
-    viewers,
-    startWebRTCStream,
-    stopWebRTCStream,
-    toggleMute,
-    toggleCamera
-  } = useWebRTC();
-
+  // Get market data first
   const {
     market,
     isStreamer,
@@ -57,6 +48,49 @@ export default function MarketDetails() {
     setPriceHistory,
     marketCreatorRef
   } = useMarketData(marketId, address);
+
+  // Custom WebRTC hook
+  const {
+    localStream,
+    remoteStreams,
+    viewerCount,
+    startWebRTCStream,
+    stopWebRTCStream,
+    connectToStreamer,
+    disconnectFromStreamer,
+    isConnecting,
+    error: webrtcError
+  } = useWebRTC({
+    marketId: marketId || '',
+    wallet: address || '',
+    isStreamer: market?.creator === address,
+    isStreaming
+  });
+
+  // Local state for stream controls
+  const [isMuted, setIsMuted] = React.useState(false);
+  const [isCameraOff, setIsCameraOff] = React.useState(false);
+
+  // Toggle functions for stream controls
+  const toggleMute = () => {
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
+      }
+    }
+  };
+
+  const toggleCamera = () => {
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsCameraOff(!videoTrack.enabled);
+      }
+    }
+  };
 
   // Attach video stream to video element
   React.useEffect(() => {
@@ -75,14 +109,31 @@ export default function MarketDetails() {
     if (!marketId) return;
     const socket = getSocket();
 
+    // Join market room for chat
+    socket.emit('join_market', { marketId }, (res: Ack) => {
+      console.log('Joined market room for chat:', res);
+    });
+
     // Load chat history
     socket.emit('get_chat', { marketId, limit: 100 }, (res: Ack<{ wallet: string; message: string; at: string }[]>) => {
-      if (res?.ok && Array.isArray(res.data)) setChat(res.data);
+      if (res?.ok && Array.isArray(res.data)) {
+        setChat(res.data);
+        console.log('Loaded chat history:', res.data.length, 'messages');
+      }
     });
 
     // Socket event listeners
     socket.on("chat_message", (m: { marketId: string; wallet: string; message: string; at: string }) => {
-      if (m.marketId === marketId) setChat((prev) => [...prev, { wallet: m.wallet, message: m.message, at: m.at }]);
+      console.log('Received chat message:', m);
+      if (m.marketId === marketId) {
+        setChat((prev) => {
+          // Check if message already exists to avoid duplicates
+          const exists = prev.some(msg => msg.wallet === m.wallet && msg.message === m.message && msg.at === m.at);
+          if (exists) return prev;
+          return [...prev, { wallet: m.wallet, message: m.message, at: m.at }];
+        });
+        console.log('Added message to chat:', { wallet: m.wallet, message: m.message, at: m.at });
+      }
     });
 
     socket.on("join_request", (data: { marketId: string; wallet: string }) => {
@@ -102,6 +153,8 @@ export default function MarketDetails() {
       socket.off("chat_message");
       socket.off("join_request");
       socket.off("join_request_accepted");
+      // Leave market room
+      socket.emit('leave_market', { marketId });
       stopWebRTCStream();
     };
   }, [marketId, address, startWebRTCStream, stopWebRTCStream]);
@@ -141,15 +194,24 @@ export default function MarketDetails() {
       alert('Please connect your wallet to stop streaming');
       return;
     }
+    
+    setIsStopping(true);
+    
+    // Stop WebRTC stream immediately for better UX
+    console.log('Stopping stream immediately...');
+    setIsStreaming(false);
+    stopWebRTCStream();
+    
+    // Then update backend
     const socket = getSocket();
     socket.emit('stop_stream', { marketId, wallet: address }, (res: Ack) => {
+      setIsStopping(false);
       if (res?.ok) {
-        console.log('Stream stopped');
-        setIsStreaming(false);
-        stopWebRTCStream();
+        console.log('Stream stopped on backend');
       } else {
-        console.error('Failed to stop stream:', res?.error);
-        alert(`Failed to stop stream: ${res?.error}`);
+        console.error('Failed to stop stream on backend:', res?.error);
+        // If backend fails, we could show a warning but keep the stream stopped locally
+        alert(`Warning: Stream stopped locally but failed to update backend: ${res?.error}`);
       }
     });
   };
@@ -190,6 +252,7 @@ export default function MarketDetails() {
               onStartStream={startStreaming}
               onStopStream={stopStreaming}
               isStreaming={isStreaming}
+              isStopping={isStopping}
               isStreamer={isStreamer}
               marketId={marketId}
               address={address}
@@ -210,18 +273,19 @@ export default function MarketDetails() {
                 isStreamer={isStreamer}
                 isStreaming={isStreaming}
                 localStream={localStream}
-                viewers={viewers}
+                viewers={viewerCount}
                 videoElementRef={videoElementRef}
                 onRequestToJoin={requestToJoin}
                 address={address}
-              />
-              {/* Stream Video Controls */}
-              <StreamVideoControls
-                localStream={localStream}
                 isMuted={isMuted}
                 isCameraOff={isCameraOff}
                 onToggleMute={toggleMute}
                 onToggleCamera={toggleCamera}
+                remoteStreams={remoteStreams}
+                onConnectToStreamer={connectToStreamer}
+                onDisconnectFromStreamer={disconnectFromStreamer}
+                isConnecting={isConnecting}
+                error={webrtcError}
               />
             </div>
 
@@ -270,6 +334,11 @@ export default function MarketDetails() {
             {/* Top Holders */}
             <TopHolders holders={holders} />
           </div>
+        </div>
+
+        {/* Comments Section */}
+        <div className="mt-8">
+          <CommentsSection marketId={marketId} address={address} />
         </div>
       </div>
     </div>

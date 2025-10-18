@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 
 interface PricePoint {
   timestamp: Date;
@@ -12,181 +13,162 @@ interface PricePoint {
 
 interface PriceChartProps {
   data: PricePoint[];
-  className?: string;
 }
 
-export default function PriceChart({ data, className = "" }: PriceChartProps) {
-  if (data.length === 0) {
+export default function PriceChart({ data }: PriceChartProps) {
+  const chartData = useMemo(() => {
+    if (!data || data.length === 0) return null;
+
+    // Calculate market cap and volume from the data
+    const processedData = data.map((point, index) => {
+      // Use provided values or calculate defaults
+      const bullishSupply = point.bullishSupply || 1000000;
+      const fadeSupply = point.fadeSupply || 1000000;
+      const poolBalance = point.poolBalance || 100000;
+      
+      const marketCap = poolBalance * 2; // Simplified market cap calculation
+      const volume = index > 0 ? Math.abs(poolBalance - (data[index - 1].poolBalance || 100000)) : 0;
+      
+      return {
+        ...point,
+        bullishSupply,
+        fadeSupply,
+        poolBalance,
+        marketCap,
+        volume,
+        price: point.bullishPrice, // Use bullish price as main price
+        change: index > 0 ? ((point.bullishPrice - data[index - 1].bullishPrice) / data[index - 1].bullishPrice) * 100 : 0
+      };
+    });
+
+    return processedData;
+  }, [data]);
+
+  const currentData = chartData?.[chartData.length - 1];
+  const previousData = chartData?.[chartData.length - 2];
+  
+  const currentPrice = currentData?.price || 0;
+  const priceChange = currentData?.change || 0;
+  const marketCap = currentData?.marketCap || 0;
+  const volume24h = chartData?.reduce((sum, point) => sum + point.volume, 0) || 0;
+
+  if (!chartData || chartData.length === 0) {
     return (
-      <div className={`bg-black border border-white/10 rounded-lg p-4 ${className}`}>
-        <h3 className="text-white font-semibold mb-4">Price Chart</h3>
-        <div className="text-white/60 text-sm text-center py-8">
-          No price data available yet
+      <div className="bg-black border border-white/10 rounded-lg p-6">
+        <div className="text-white mb-4">
+          <h3 className="text-lg font-semibold mb-2">Price Chart</h3>
+          <div className="text-white/60 text-sm">No price data available yet</div>
         </div>
       </div>
     );
   }
 
-  // Simple mock chart - in a real app you'd use a charting library like Chart.js or Recharts
-  const maxPrice = Math.max(...data.map(d => Math.max(d.bullishPrice, d.fadePrice)));
-  const minPrice = Math.min(...data.map(d => Math.min(d.bullishPrice, d.fadePrice)));
-  const priceRange = maxPrice - minPrice || 1;
-
-  const getY = (price: number) => {
-    return 100 - ((price - minPrice) / priceRange) * 80; // 80% height, 20% margin
-  };
-
-  const latestData = data[data.length - 1];
-  const priceChange = data.length > 1 ? {
-    bullish: latestData.bullishPrice - data[data.length - 2].bullishPrice,
-    fade: latestData.fadePrice - data[data.length - 2].fadePrice
-  } : { bullish: 0, fade: 0 };
-
   return (
-    <div className={`bg-black border border-white/10 rounded-lg p-4 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">📈</span>
-          <h3 className="text-white font-semibold">Price Chart</h3>
-        </div>
-        <div className="text-xs text-white/60">
-          {data.length} data points
-        </div>
-      </div>
-      
-      {/* Current prices with change indicators */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-          <div className="text-green-300 text-sm font-medium">Bullish</div>
-          <div className="text-white text-lg font-bold">${latestData.bullishPrice.toFixed(3)}</div>
-          <div className={`text-xs ${priceChange.bullish >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {priceChange.bullish >= 0 ? '+' : ''}{priceChange.bullish.toFixed(3)}
+    <div className="bg-black border border-white/10 rounded-lg p-6">
+      {/* Header */}
+      <div className="text-white mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold">Market Cap (USD)</h3>
+            <div className="text-2xl font-bold mt-1">
+              ${(marketCap / 1000).toFixed(1)}K
+            </div>
+            <div className={`text-sm ${priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-white/60">Price</div>
+            <div className="text-lg font-semibold">${currentPrice.toFixed(6)}</div>
+            <div className="text-sm text-white/60">24h Vol</div>
+            <div className="text-sm">${(volume24h / 1000).toFixed(1)}K</div>
           </div>
         </div>
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-          <div className="text-red-300 text-sm font-medium">Fade</div>
-          <div className="text-white text-lg font-bold">${latestData.fadePrice.toFixed(3)}</div>
-          <div className={`text-xs ${priceChange.fade >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {priceChange.fade >= 0 ? '+' : ''}{priceChange.fade.toFixed(3)}
-          </div>
+
+        {/* Timeframe buttons */}
+        <div className="flex gap-2 mb-4">
+          {['1h', '1D', '5D', '1M'].map((timeframe) => (
+            <button
+              key={timeframe}
+              className={`px-3 py-1 rounded text-sm ${
+                timeframe === '1h' 
+                  ? 'bg-white/10 text-white' 
+                  : 'bg-white/5 text-white/60 hover:text-white'
+              }`}
+            >
+              {timeframe}
+            </button>
+          ))}
         </div>
       </div>
-      
-      {/* Enhanced chart */}
-      <div className="relative h-48 bg-gradient-to-b from-white/5 to-transparent rounded-lg p-4 border border-white/5">
-        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {/* Grid lines */}
-          {[0, 25, 50, 75, 100].map(y => (
-            <line
-              key={y}
-              x1="0"
-              y1={y}
-              x2="100"
-              y2={y}
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="0.5"
-            />
-          ))}
-          
-          {/* Vertical grid lines */}
-          {[0, 25, 50, 75, 100].map(x => (
-            <line
-              key={x}
-              x1={x}
-              y1="0"
-              x2={x}
-              y2="100"
-              stroke="rgba(255,255,255,0.05)"
-              strokeWidth="0.3"
-            />
-          ))}
-          
-          {/* Bullish area fill */}
-          {data.length > 1 && (
-            <polygon
-              points={`0,100 ${data.map((d, i) => `${(i / (data.length - 1)) * 100},${getY(d.bullishPrice)}`).join(' ')} 100,100`}
-              fill="url(#bullishGradient)"
-            />
-          )}
-          
-          {/* Fade area fill */}
-          {data.length > 1 && (
-            <polygon
-              points={`0,100 ${data.map((d, i) => `${(i / (data.length - 1)) * 100},${getY(d.fadePrice)}`).join(' ')} 100,100`}
-              fill="url(#fadeGradient)"
-            />
-          )}
-          
-          {/* Bullish price line */}
-          {data.length > 1 && (
-            <polyline
-              points={data.map((d, i) => `${(i / (data.length - 1)) * 100},${getY(d.bullishPrice)}`).join(' ')}
-              fill="none"
-              stroke="#10b981"
-              strokeWidth="1.5"
-            />
-          )}
-          
-          {/* Fade price line */}
-          {data.length > 1 && (
-            <polyline
-              points={data.map((d, i) => `${(i / (data.length - 1)) * 100},${getY(d.fadePrice)}`).join(' ')}
-              fill="none"
-              stroke="#ef4444"
-              strokeWidth="1.5"
-            />
-          )}
-          
-          {/* Data points */}
-          {data.map((d, i) => {
-            const xPos = data.length === 1 ? 50 : (i / (data.length - 1)) * 100;
+
+      {/* Chart Area */}
+      <div className="relative h-64 bg-black/20 rounded-lg border border-white/5 p-4">
+        <div className="h-full flex items-end justify-between">
+          {chartData.map((point, index) => {
+            const height = Math.max(4, (point.marketCap / Math.max(...chartData.map(p => p.marketCap))) * 200);
+            const isPositive = point.change >= 0;
+            
             return (
-              <g key={i}>
-                <circle cx={xPos} cy={getY(d.bullishPrice)} r="0.8" fill="#10b981" />
-                <circle cx={xPos} cy={getY(d.fadePrice)} r="0.8" fill="#ef4444" />
-              </g>
+              <div
+                key={index}
+                className="flex flex-col items-center justify-end h-full"
+                style={{ width: `${100 / chartData.length}%` }}
+              >
+                {/* Candlestick */}
+                <div
+                  className={`w-1 rounded-sm ${
+                    isPositive ? 'bg-green-400' : 'bg-red-400'
+                  }`}
+                  style={{ height: `${height}px` }}
+                />
+                
+                {/* Price label for current point */}
+                {index === chartData.length - 1 && (
+                  <div className="absolute top-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                    ${point.price.toFixed(6)}
+                  </div>
+                )}
+              </div>
             );
           })}
-          
-          {/* Gradients */}
-          <defs>
-            <linearGradient id="bullishGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="rgba(16, 185, 129, 0.3)" />
-              <stop offset="100%" stopColor="rgba(16, 185, 129, 0.05)" />
-            </linearGradient>
-            <linearGradient id="fadeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="rgba(239, 68, 68, 0.3)" />
-              <stop offset="100%" stopColor="rgba(239, 68, 68, 0.05)" />
-            </linearGradient>
-          </defs>
-        </svg>
-        
-        {/* Price labels */}
-        <div className="absolute left-2 top-2 text-xs text-white/60 font-mono">
-          ${maxPrice.toFixed(3)}
         </div>
-        <div className="absolute left-2 bottom-2 text-xs text-white/60 font-mono">
-          ${minPrice.toFixed(3)}
+        
+        {/* Y-axis labels */}
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-white/40">
+          <div>${(Math.max(...chartData.map(p => p.marketCap)) / 1000).toFixed(0)}K</div>
+          <div>${(Math.max(...chartData.map(p => p.marketCap)) / 2000).toFixed(0)}K</div>
+          <div>$0</div>
         </div>
       </div>
-      
-      {/* Enhanced legend and stats */}
-      <div className="flex justify-between items-center mt-4 text-xs">
-        <div className="flex gap-4">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-0.5 bg-green-400"></div>
-            <span className="text-white/80">Bullish</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-0.5 bg-red-400"></div>
-            <span className="text-white/80">Fade</span>
-          </div>
+
+      {/* Bottom Stats */}
+      <div className="mt-4 flex justify-between text-sm text-white/60">
+        <div>Vol 24h ${(volume24h / 1000).toFixed(1)}K</div>
+        <div>Price ${currentPrice.toFixed(8)}</div>
+        <div className={priceChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+          {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
         </div>
-        {latestData.poolBalance && (
-          <div className="text-white/60 font-mono">
-            Pool: ${latestData.poolBalance.toFixed(2)}
-          </div>
-        )}
+      </div>
+
+      {/* OHLC Data */}
+      <div className="mt-4 grid grid-cols-4 gap-4 text-sm">
+        <div>
+          <div className="text-white/60">O</div>
+          <div className="text-white">${chartData[0]?.price.toFixed(6) || '0.000000'}</div>
+        </div>
+        <div>
+          <div className="text-white/60">H</div>
+          <div className="text-white">${Math.max(...chartData.map(p => p.price)).toFixed(6)}</div>
+        </div>
+        <div>
+          <div className="text-white/60">L</div>
+          <div className="text-white">${Math.min(...chartData.map(p => p.price)).toFixed(6)}</div>
+        </div>
+        <div>
+          <div className="text-white/60">C</div>
+          <div className="text-white">${currentPrice.toFixed(6)}</div>
+        </div>
       </div>
     </div>
   );

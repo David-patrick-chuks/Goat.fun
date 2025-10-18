@@ -1,5 +1,18 @@
 export type Side = "bullish" | "fade";
 
+// WebRTC types for Node.js backend
+interface RTCSessionDescriptionInit {
+  type: 'offer' | 'answer' | 'pranswer' | 'rollback';
+  sdp?: string;
+}
+
+interface RTCIceCandidateInit {
+  candidate?: string;
+  sdpMLineIndex?: number | null;
+  sdpMid?: string | null;
+  usernameFragment?: string | null;
+}
+
 export interface ClientEvents {
   user_connect: (data: { wallet: string; username?: string }) => void;
   update_profile: (data: { wallet: string; username?: string; bio?: string; avatarUrl?: string }, ack?: (result: AckResult) => void) => void;
@@ -20,6 +33,15 @@ export interface ClientEvents {
   accept_join_request: (data: { marketId: string; requesterWallet: string; streamerWallet: string }, ack?: (result: AckResult) => void) => void;
   get_holders: (data: { marketId: string; limit?: number }, ack?: (result: AckResult) => void) => void;
   get_price_history: (data: { marketId: string; limit?: number }, ack?: (result: AckResult) => void) => void;
+  // Comment Events
+  add_comment: (data: { marketId: string; wallet: string; message?: string; imageData?: string; filename?: string }, ack?: (result: AckResult) => void) => void;
+  get_comments: (data: { marketId: string; limit?: number; page?: number }, ack?: (result: AckResult) => void) => void;
+  // WebRTC Signaling Events
+  webrtc_offer: (data: { marketId: string; fromWallet: string; toWallet: string; offer: RTCSessionDescriptionInit }) => void;
+  webrtc_answer: (data: { marketId: string; fromWallet: string; toWallet: string; answer: RTCSessionDescriptionInit }) => void;
+  webrtc_ice_candidate: (data: { marketId: string; fromWallet: string; toWallet: string; candidate: RTCIceCandidateInit }) => void;
+  webrtc_viewer_join: (data: { marketId: string; viewerWallet: string }) => void;
+  webrtc_viewer_leave: (data: { marketId: string; viewerWallet: string }) => void;
 }
 
 export interface ServerEvents {
@@ -29,6 +51,14 @@ export interface ServerEvents {
   chat_message: (data: { marketId: string; wallet: string; message: string; at: string }) => void;
   join_request: (data: { marketId: string; wallet: string }) => void;
   join_request_accepted: (data: { marketId: string; streamerWallet: string }) => void;
+  // Comment Events
+  comment_added: (data: { marketId: string; wallet: string; message?: string; imageUrl?: string; createdAt: string }) => void;
+  // WebRTC Signaling Events
+  webrtc_offer: (data: { marketId: string; fromWallet: string; toWallet: string; offer: RTCSessionDescriptionInit }) => void;
+  webrtc_answer: (data: { marketId: string; fromWallet: string; toWallet: string; answer: RTCSessionDescriptionInit }) => void;
+  webrtc_ice_candidate: (data: { marketId: string; fromWallet: string; toWallet: string; candidate: RTCIceCandidateInit }) => void;
+  webrtc_viewer_joined: (data: { marketId: string; viewerWallet: string; viewerCount: number }) => void;
+  webrtc_viewer_left: (data: { marketId: string; viewerWallet: string; viewerCount: number }) => void;
 }
 
 export interface AckResult {

@@ -4,7 +4,7 @@ import { uploadAvatarFromBuffer } from "../../services/uploadService";
 import type { AckResult, ClientEvents, ServerEvents } from "../../types/socket";
 import { usernameFromWallet } from "../../utils/user";
 
-export function registerUserHandlers(io: Server<ClientEvents, ServerEvents>, socket: Socket<ClientEvents, ServerEvents>): void {
+export function registerUserHandlers(_io: Server<ClientEvents, ServerEvents>, socket: Socket<ClientEvents, ServerEvents>): void {
   socket.on(
     "user_connect",
     async (
@@ -12,6 +12,12 @@ export function registerUserHandlers(io: Server<ClientEvents, ServerEvents>, soc
       ack?: (result: AckResult) => void
     ) => {
       try {
+        console.log(`[socket] user_connect received for wallet: ${wallet}`);
+        
+        // Store wallet in socket data for WebRTC handlers
+        socket.data.wallet = wallet;
+        console.log(`[socket] Wallet ${wallet} stored in socket ${socket.id}`);
+        
         const defaultUsername = usernameFromWallet(wallet);
         await User.updateOne(
           { wallet },

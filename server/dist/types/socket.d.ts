@@ -1,4 +1,14 @@
 export type Side = "bullish" | "fade";
+interface RTCSessionDescriptionInit {
+    type: 'offer' | 'answer' | 'pranswer' | 'rollback';
+    sdp?: string;
+}
+interface RTCIceCandidateInit {
+    candidate?: string;
+    sdpMLineIndex?: number | null;
+    sdpMid?: string | null;
+    usernameFragment?: string | null;
+}
 export interface ClientEvents {
     user_connect: (data: {
         wallet: string;
@@ -18,14 +28,18 @@ export interface ClientEvents {
     upload_market_media: (data: {
         data: string;
         filename: string;
+        marketId?: string;
+        mediaType?: "banner" | "media";
     }, ack?: (result: AckResult) => void) => void;
     create_market: (data: CreateMarketPayload, ack?: (result: AckResult) => void) => void;
     join_market: (data: JoinMarketPayload, ack?: (result: AckResult) => void) => void;
     start_stream: (data: {
         marketId: string;
+        wallet: string;
     }, ack?: (result: AckResult) => void) => void;
     stop_stream: (data: {
         marketId: string;
+        wallet: string;
     }, ack?: (result: AckResult) => void) => void;
     end_market: (data: {
         marketId: string;
@@ -53,6 +67,55 @@ export interface ClientEvents {
         marketId: string;
         limit?: number;
     }, ack?: (result: AckResult) => void) => void;
+    buy_shares: (data: {
+        marketId: string;
+        wallet: string;
+        side: Side;
+        amount: number;
+    }, ack?: (result: AckResult) => void) => void;
+    request_to_join: (data: {
+        marketId: string;
+        wallet: string;
+    }, ack?: (result: AckResult) => void) => void;
+    accept_join_request: (data: {
+        marketId: string;
+        requesterWallet: string;
+        streamerWallet: string;
+    }, ack?: (result: AckResult) => void) => void;
+    get_holders: (data: {
+        marketId: string;
+        limit?: number;
+    }, ack?: (result: AckResult) => void) => void;
+    get_price_history: (data: {
+        marketId: string;
+        limit?: number;
+    }, ack?: (result: AckResult) => void) => void;
+    webrtc_offer: (data: {
+        marketId: string;
+        fromWallet: string;
+        toWallet: string;
+        offer: RTCSessionDescriptionInit;
+    }) => void;
+    webrtc_answer: (data: {
+        marketId: string;
+        fromWallet: string;
+        toWallet: string;
+        answer: RTCSessionDescriptionInit;
+    }) => void;
+    webrtc_ice_candidate: (data: {
+        marketId: string;
+        fromWallet: string;
+        toWallet: string;
+        candidate: RTCIceCandidateInit;
+    }) => void;
+    webrtc_viewer_join: (data: {
+        marketId: string;
+        viewerWallet: string;
+    }) => void;
+    webrtc_viewer_leave: (data: {
+        marketId: string;
+        viewerWallet: string;
+    }) => void;
 }
 export interface ServerEvents {
     market_update: (data: MarketUpdateEvent) => void;
@@ -68,6 +131,42 @@ export interface ServerEvents {
         wallet: string;
         message: string;
         at: string;
+    }) => void;
+    join_request: (data: {
+        marketId: string;
+        wallet: string;
+    }) => void;
+    join_request_accepted: (data: {
+        marketId: string;
+        streamerWallet: string;
+    }) => void;
+    webrtc_offer: (data: {
+        marketId: string;
+        fromWallet: string;
+        toWallet: string;
+        offer: RTCSessionDescriptionInit;
+    }) => void;
+    webrtc_answer: (data: {
+        marketId: string;
+        fromWallet: string;
+        toWallet: string;
+        answer: RTCSessionDescriptionInit;
+    }) => void;
+    webrtc_ice_candidate: (data: {
+        marketId: string;
+        fromWallet: string;
+        toWallet: string;
+        candidate: RTCIceCandidateInit;
+    }) => void;
+    webrtc_viewer_joined: (data: {
+        marketId: string;
+        viewerWallet: string;
+        viewerCount: number;
+    }) => void;
+    webrtc_viewer_left: (data: {
+        marketId: string;
+        viewerWallet: string;
+        viewerCount: number;
     }) => void;
 }
 export interface AckResult {
@@ -99,4 +198,5 @@ export interface MarketUpdateEvent {
     fadePrice: number;
     poolBalance: number;
 }
+export {};
 //# sourceMappingURL=socket.d.ts.map

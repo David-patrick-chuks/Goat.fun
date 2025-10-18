@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 
 interface StreamControlsProps {
   localStream: MediaStream | null;
@@ -11,6 +10,7 @@ interface StreamControlsProps {
   onStartStream: () => void;
   onStopStream: () => void;
   isStreaming: boolean;
+  isStopping: boolean;
   isStreamer: boolean;
   marketId: string | null;
   address: string | undefined;
@@ -25,6 +25,7 @@ export default function StreamControls({
   onStartStream,
   onStopStream,
   isStreaming,
+  isStopping,
   isStreamer,
   marketId,
   address
@@ -43,9 +44,14 @@ export default function StreamControls({
       ) : (
         <button 
           onClick={onStopStream} 
-          className="px-3 py-1 rounded text-sm bg-red-500/20 text-red-300 border border-red-300/30 hover:bg-red-500/30"
+          disabled={isStopping}
+          className={`px-3 py-1 rounded text-sm border border-red-300/30 hover:bg-red-500/30 ${
+            isStopping 
+              ? 'bg-red-500/20 text-red-300 cursor-not-allowed' 
+              : 'bg-red-500/20 text-red-300'
+          }`}
         >
-          Stop Stream
+          {isStopping ? 'Stopping...' : 'Stop Stream'}
         </button>
       )}
     </div>

@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
-import { TrendingDown, TrendingUp } from "lucide-react";
 import { getSocket } from "@/lib/socket";
 import type { Ack } from "@/lib/types";
+import { TrendingDown, TrendingUp } from "lucide-react";
 
 interface TradingSectionProps {
   marketId: string | null;
@@ -76,74 +75,104 @@ export default function TradingSection({
   };
 
   return (
-    <div className="bg-black border border-white/10 rounded-lg p-4">
-      <div className="text-white mb-4">
-        <div className="text-lg font-semibold mb-2">Choose Side</div>
-        <div className="text-sm text-white/70 mb-4">Select Bullish or Fade</div>
-        
-        <div className="flex gap-4 mb-4">
-          <button
-            onClick={() => setSelectedSide('bullish')}
-            className={`flex-1 p-3 rounded-lg border-2 transition-all ${
-              selectedSide === 'bullish' 
-                ? 'border-green-400 bg-green-400/10 text-green-300' 
-                : 'border-white/20 bg-white/5 text-white/70 hover:border-green-400/50'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              <div>
-                <div className="font-medium">Bullish</div>
-                <div className="text-sm">$1.20</div>
-              </div>
-            </div>
+    <div className="bg-black border border-white/10 rounded-lg p-6">
+      <div className="text-white">
+        {/* Buy/Sell Toggle */}
+        <div className="flex gap-2 mb-6">
+          <button className="px-4 py-2 bg-green-500/20 text-green-300 rounded-lg font-medium">
+            Buy
           </button>
-          
-          <button
-            onClick={() => setSelectedSide('fade')}
-            className={`flex-1 p-3 rounded-lg border-2 transition-all ${
-              selectedSide === 'fade' 
-                ? 'border-red-400 bg-red-400/10 text-red-300' 
-                : 'border-white/20 bg-white/5 text-white/70 hover:border-red-400/50'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <TrendingDown className="w-5 h-5" />
-              <div>
-                <div className="font-medium">Fade</div>
-                <div className="text-sm">$0.80</div>
-              </div>
-            </div>
+          <button className="px-4 py-2 bg-white/5 text-white/60 rounded-lg font-medium hover:text-white">
+            Sell
           </button>
         </div>
+
+        {/* Side Selection */}
+        <div className="mb-6">
+          <div className="text-sm text-white/60 mb-3">Choose Side</div>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setSelectedSide('bullish')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                selectedSide === 'bullish' 
+                  ? 'border-green-400 bg-green-400/10 text-green-300' 
+                  : 'border-white/20 bg-white/5 text-white/70 hover:border-green-400/50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <TrendingUp className="w-6 h-6" />
+                <div>
+                  <div className="font-semibold">Bullish</div>
+                  <div className="text-sm opacity-80">$1.20</div>
+                </div>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => setSelectedSide('fade')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                selectedSide === 'fade' 
+                  ? 'border-red-400 bg-red-400/10 text-red-300' 
+                  : 'border-white/20 bg-white/5 text-white/70 hover:border-red-400/50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <TrendingDown className="w-6 h-6" />
+                <div>
+                  <div className="font-semibold">Fade</div>
+                  <div className="text-sm opacity-80">$0.80</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
         
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm text-white/70 mb-1">Amount (USD)</label>
+        {/* Amount Input */}
+        <div className="mb-6">
+          <div className="text-sm text-white/60 mb-2">Amount</div>
+          <div className="relative">
             <input
               type="number"
               value={buyAmount}
               onChange={(e) => setBuyAmount(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-white"
-              placeholder="Enter amount"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-lg"
+              placeholder="0.00"
               min="0"
               step="0.01"
             />
+            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60">
+              SOL
+            </div>
           </div>
-          
-          <button
-            onClick={handleBuyShares}
-            disabled={!selectedSide || !buyAmount || isBuying || !address}
-            className={`w-full py-3 rounded-lg font-medium transition-all ${
-              selectedSide && buyAmount && address && !isBuying
-                ? selectedSide === 'bullish'
-                  ? 'bg-green-500 hover:bg-green-600 text-white'
-                  : 'bg-red-500 hover:bg-red-600 text-white'
-                : 'bg-gray-500 text-gray-300 cursor-not-allowed'
-            }`}
-          >
-            {isBuying ? 'Processing...' : `Buy ${selectedSide || 'Shares'}`}
-          </button>
+        </div>
+        
+        {/* Buy Button */}
+        <button
+          onClick={handleBuyShares}
+          disabled={!selectedSide || !buyAmount || isBuying || !address}
+          className={`w-full py-4 rounded-lg font-semibold text-lg transition-all ${
+            selectedSide && buyAmount && address && !isBuying
+              ? selectedSide === 'bullish'
+                ? 'bg-green-500 hover:bg-green-600 text-white'
+                : 'bg-red-500 hover:bg-red-600 text-white'
+              : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+          }`}
+        >
+          {isBuying ? 'Processing...' : address ? `Buy ${selectedSide || 'Shares'}` : 'Log in to buy'}
+        </button>
+
+        {/* Position Info */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <div className="text-sm text-white/60 mb-2">Position</div>
+          <div className="text-white font-semibold">$0.00 0 Shares</div>
+          <div className="flex justify-between text-sm text-white/60 mt-2">
+            <span>Trades</span>
+            <span>Profit/Loss</span>
+          </div>
+          <div className="flex justify-between text-sm text-white mt-1">
+            <span>0</span>
+            <span>$0.00</span>
+          </div>
         </div>
       </div>
     </div>

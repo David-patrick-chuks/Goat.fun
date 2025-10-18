@@ -1,7 +1,7 @@
 "use client";
 
 import { config } from "@/hooks/wagmi";
-import { getSocket } from "@/lib/socket";
+import { emitUserConnect, getSocket, handleWalletDisconnect } from "@/lib/socket";
 import {
   darkTheme,
   DisclaimerComponent,
@@ -14,18 +14,39 @@ import { useAccount, WagmiProvider } from "wagmi";
 
 function useSocketInit(): void {
   const { address, isConnected } = useAccount();
+  
+  // Initialize socket connection once
   useEffect(() => {
     const socket = getSocket();
-    // Always connect to socket, but only emit user_connect if wallet is connected
+    console.log(`[fe][socket] Socket initialized`);
+    
+    const handleConnect = () => {
+      console.log(`[fe][socket] Socket connected with ID: ${socket.id}`);
+      // If wallet is already connected when socket connects, emit user_connect
+      if (isConnected && address) {
+        emitUserConnect(address);
+      }
+    };
+
+    if (socket.connected) {
+      handleConnect();
+    } else {
+      socket.on('connect', handleConnect);
+    }
+
+    return () => {
+      socket.off('connect', handleConnect);
+    };
+  }, []); // Only run once
+
+  // Handle wallet connection changes
+  useEffect(() => {
     if (isConnected && address) {
-      socket.emit(
-        "user_connect",
-        { wallet: address },
-        (res: { ok?: boolean; error?: unknown }) => {
-          if (!res?.ok)
-            console.error("[fe][socket] user_connect error", res?.error);
-        }
-      );
+      console.log(`[fe][socket] Wallet connected: ${address}`);
+      emitUserConnect(address);
+    } else if (!isConnected) {
+      console.log(`[fe][socket] Wallet disconnected`);
+      handleWalletDisconnect();
     }
   }, [isConnected, address]);
 }
