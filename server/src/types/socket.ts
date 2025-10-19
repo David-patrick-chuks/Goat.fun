@@ -24,7 +24,7 @@ export interface ClientEvents {
   stop_stream: (data: { marketId: string; wallet: string }, ack?: (result: AckResult) => void) => void;
   end_market: (data: { marketId: string; finalResult?: Side | "none" }, ack?: (result: AckResult) => void) => void;
   get_markets: (data: { status?: "active" | "ended" | "cancelled"; page?: number; limit?: number; sort?: "newest" | "trending" | "market_cap"; search?: string }, ack?: (result: AckResult) => void) => void;
-  get_user: (data: { wallet: string }, ack?: (result: AckResult) => void) => void;
+  get_user: (data: { identifier: string }, ack?: (result: AckResult) => void) => void;
   get_market_detail: (data: { marketId: string }, ack?: (result: AckResult) => void) => void;
   chat_message: (data: { marketId: string; wallet: string; message: string }, ack?: (result: AckResult) => void) => void;
   get_chat: (data: { marketId: string; limit?: number }, ack?: (result: AckResult) => void) => void;
@@ -36,6 +36,7 @@ export interface ClientEvents {
   // Comment Events
   add_comment: (data: { marketId: string; wallet: string; message?: string; imageData?: string; filename?: string }, ack?: (result: AckResult) => void) => void;
   get_comments: (data: { marketId: string; limit?: number; page?: number }, ack?: (result: AckResult) => void) => void;
+  like_comment: (data: { commentId: string; wallet: string }, ack?: (result: AckResult) => void) => void;
   // Chat Events
   create_conversation: (data: { participants: string[]; type: 'direct' | 'group'; name?: string; description?: string }, ack?: (result: AckResult) => void) => void;
   get_conversations: (data: { wallet: string; limit?: number; page?: number }, ack?: (result: AckResult) => void) => void;

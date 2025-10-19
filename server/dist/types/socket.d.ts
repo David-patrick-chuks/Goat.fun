@@ -53,7 +53,7 @@ export interface ClientEvents {
         search?: string;
     }, ack?: (result: AckResult) => void) => void;
     get_user: (data: {
-        wallet: string;
+        identifier: string;
     }, ack?: (result: AckResult) => void) => void;
     get_market_detail: (data: {
         marketId: string;
@@ -101,6 +101,10 @@ export interface ClientEvents {
         marketId: string;
         limit?: number;
         page?: number;
+    }, ack?: (result: AckResult) => void) => void;
+    like_comment: (data: {
+        commentId: string;
+        wallet: string;
     }, ack?: (result: AckResult) => void) => void;
     create_conversation: (data: {
         participants: string[];
@@ -191,6 +195,7 @@ export interface ServerEvents {
     chat_message: (data: {
         marketId: string;
         wallet: string;
+        username?: string;
         message: string;
         at: string;
     }) => void;
@@ -205,6 +210,7 @@ export interface ServerEvents {
     comment_added: (data: {
         marketId: string;
         wallet: string;
+        username?: string;
         message?: string;
         imageUrl?: string;
         replyTo?: string;

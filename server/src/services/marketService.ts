@@ -47,6 +47,11 @@ export async function joinMarket(payload: JoinMarketPayload): Promise<MarketDoc>
   if (!market) throw new Error("Market not found");
   if (market.status !== "active") throw new Error("Market not active");
 
+  // Validate required fields for trading
+  if (!payload.side || !payload.shares) {
+    throw new Error("Side and shares are required for trading");
+  }
+
   // Calculate current price based on side supply
   const currentSupply = payload.side === "bullish" ? market.bullishSupply : market.fadeSupply;
   const price = computePriceFromSupply(currentSupply);

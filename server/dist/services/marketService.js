@@ -42,6 +42,9 @@ async function joinMarket(payload) {
         throw new Error("Market not found");
     if (market.status !== "active")
         throw new Error("Market not active");
+    if (!payload.side || !payload.shares) {
+        throw new Error("Side and shares are required for trading");
+    }
     const currentSupply = payload.side === "bullish" ? market.bullishSupply : market.fadeSupply;
     const price = computePriceFromSupply(currentSupply);
     const cost = price * payload.shares;
