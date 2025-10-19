@@ -12,7 +12,6 @@ async function main() {
         throw new Error(`Default avatar not found at ${localPath}`);
     }
     const res = await (0, uploadService_1.uploadLocalFile)(localPath, "goatfun/defaults");
-    // Print the URL so the user can copy it into DEFAULT_AVATAR_URL
     console.log(res.secure_url);
 }
 main().catch((err) => {

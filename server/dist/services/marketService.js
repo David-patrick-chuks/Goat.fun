@@ -10,7 +10,6 @@ exports.isExpired = isExpired;
 const index_1 = require("../constants/index");
 const Market_1 = require("../models/Market");
 const User_1 = require("../models/User");
-// Simple bonding curve: price = base + k * sqrt(supply)
 function computePriceFromSupply(supply) {
     return parseFloat((index_1.BASE_PRICE + index_1.BONDING_COEFFICIENT_K * Math.sqrt(Math.max(0, supply))).toFixed(6));
 }
@@ -43,11 +42,9 @@ async function joinMarket(payload) {
         throw new Error("Market not found");
     if (market.status !== "active")
         throw new Error("Market not active");
-    // Calculate current price based on side supply
     const currentSupply = payload.side === "bullish" ? market.bullishSupply : market.fadeSupply;
     const price = computePriceFromSupply(currentSupply);
     const cost = price * payload.shares;
-    // Update supplies and pool
     if (payload.side === "bullish") {
         market.bullishSupply += payload.shares;
         market.bullishPrice = computePriceFromSupply(market.bullishSupply);

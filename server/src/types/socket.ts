@@ -63,7 +63,8 @@ export interface ServerEvents {
   join_request: (data: { marketId: string; wallet: string }) => void;
   join_request_accepted: (data: { marketId: string; streamerWallet: string }) => void;
   // Comment Events
-  comment_added: (data: { marketId: string; wallet: string; message?: string; imageUrl?: string; createdAt: string }) => void;
+  comment_added: (data: { marketId: string; wallet: string; message?: string; imageUrl?: string; replyTo?: string; createdAt: string }) => void;
+  comment_liked: (data: { commentId: string; wallet: string; isLiked: boolean; likesCount: number }) => void;
   // Chat Events
   message_sent: (data: { conversationId: string; message: { _id: string; sender: string; type: string; content?: string; imageUrl?: string; marketId?: string; userId?: string; gifUrl?: string; emoji?: string; replyTo?: string; createdAt: string } }) => void;
   conversation_created: (data: { conversation: { _id: string; participants: string[]; type: string; name?: string; description?: string; createdAt: string } }) => void;
@@ -97,8 +98,8 @@ export interface CreateMarketPayload {
 export interface JoinMarketPayload {
   marketId: string;
   wallet: string;
-  side: Side;
-  shares: number;
+  side?: Side;
+  shares?: number;
 }
 
 export interface MarketUpdateEvent {

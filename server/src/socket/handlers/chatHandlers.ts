@@ -205,7 +205,7 @@ export function registerMessagingHandlers(io: Server<ClientEvents, ServerEvents>
         io.to(conversationId).emit("message_sent", {
           conversationId,
           message: {
-            _id: message._id.toString(),
+            _id: String(message._id),
             sender: message.sender,
             type: message.type,
             content: message.content,

@@ -90,12 +90,46 @@ export function registerMarketHandlers(io: Server<ClientEvents, ServerEvents>, s
 
   socket.on("join_market", async (data: JoinMarketPayload, ack?: (result: AckResult) => void) => {
     try {
-      await joinMarket(data);
-      ack?.({ ok: true });
-      console.log(`[socket] join_market success for wallet: ${data.wallet}, marketId: ${data.marketId}, side: ${data.side}, shares: ${data.shares}`);
+      // Validate wallet authentication
+      if (!socket.data.wallet) {
+        throw new Error("User not authenticated");
+      }
+      
+      // Use socket wallet if not provided in data
+      const wallet = data.wallet || socket.data.wallet;
+      
+      // Check if this is a trading operation (has side and shares) or just joining for chat
+      if (data.side && data.shares) {
+        // This is a trading operation - validate required fields
+        if (!data.marketId) {
+          throw new Error("Missing required field: marketId");
+        }
+        
+        // Validate shares is a valid number
+        if (isNaN(data.shares) || data.shares <= 0) {
+          throw new Error("Shares must be a valid positive number");
+        }
+        
+        const result = await joinMarket({
+          ...data,
+          wallet
+        });
+        
+        ack?.({ ok: true, data: result });
+        console.log(`[socket] join_market (trading) success for wallet: ${wallet}, marketId: ${data.marketId}, side: ${data.side}, shares: ${data.shares}`);
+      } else {
+        // This is just joining the market room for chat - no trading
+        if (!data.marketId) {
+          throw new Error("Missing required field: marketId");
+        }
+        
+        // Just acknowledge the join - no actual trading operation
+        ack?.({ ok: true, data: { message: "Joined market room for chat" } });
+        console.log(`[socket] join_market (chat) success for wallet: ${wallet}, marketId: ${data.marketId}`);
+      }
     } catch (err) {
       const e = err as Error;
-      console.error(`[socket] join_market error for wallet: ${data.wallet}, marketId: ${data.marketId}`, e.message);
+      console.error(`[socket] join_market error for wallet: ${data.wallet || socket.data.wallet}, marketId: ${data.marketId}`, e.message);
       ack?.({ ok: false, error: e.message });
     }
   });

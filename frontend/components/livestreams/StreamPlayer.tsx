@@ -58,11 +58,16 @@ export default function StreamPlayer({
 
   // Handle disconnecting from streamer
   const handleDisconnectFromStreamer = () => {
-    if (!currentStreamerWallet || !onDisconnectFromStreamer) return;
+    console.log('[streamplayer] Disconnecting from streamer:', currentStreamerWallet);
+    if (!currentStreamerWallet || !onDisconnectFromStreamer) {
+      console.log('[streamplayer] No streamer wallet or disconnect function available');
+      return;
+    }
     
     onDisconnectFromStreamer(currentStreamerWallet);
     setCurrentStreamerWallet(null);
     setIsPlaying(false);
+    console.log('[streamplayer] Disconnected from streamer');
   };
 
   // Update viewer video when remote stream changes
@@ -162,7 +167,14 @@ export default function StreamPlayer({
                   🔴 LIVE
                 </div>
                 <button
-                  onClick={handleDisconnectFromStreamer}
+                  onClick={() => {
+                    console.log('[streamplayer] Manual disconnect clicked');
+                    if (market?.creator && onDisconnectFromStreamer) {
+                      onDisconnectFromStreamer(market.creator);
+                    }
+                    setCurrentStreamerWallet(null);
+                    setIsPlaying(false);
+                  }}
                   className="absolute top-2 left-2 px-3 py-1 bg-red-500/80 text-white text-sm rounded hover:bg-red-500"
                 >
                   Stop Watching

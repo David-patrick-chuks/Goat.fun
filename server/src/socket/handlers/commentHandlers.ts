@@ -7,18 +7,27 @@ export function registerCommentHandlers(io: Server<ClientEvents, ServerEvents>, 
   socket.on(
     "add_comment",
     async (
-      { marketId, wallet, message, imageData, filename }: { 
+      { marketId, wallet, message, imageData, filename, replyTo }: { 
         marketId: string; 
         wallet: string; 
         message?: string; 
         imageData?: string; 
-        filename?: string 
+        filename?: string;
+        replyTo?: string;
       },
       ack?: (result: AckResult) => void
     ) => {
       try {
         if (!message && !imageData) {
           throw new Error("Comment must have either a message or an image");
+        }
+
+        // If this is a reply, verify the parent comment exists
+        if (replyTo) {
+          const parentComment = await Comment.findById(replyTo);
+          if (!parentComment || parentComment.marketId !== marketId) {
+            throw new Error("Parent comment not found");
+          }
         }
 
         let imageUrl: string | undefined;
@@ -35,7 +44,9 @@ export function registerCommentHandlers(io: Server<ClientEvents, ServerEvents>, 
           marketId,
           wallet,
           message: message?.trim(),
-          imageUrl
+          imageUrl,
+          replyTo,
+          likes: []
         });
 
         // Broadcast to all users in the market room
@@ -44,11 +55,12 @@ export function registerCommentHandlers(io: Server<ClientEvents, ServerEvents>, 
           wallet,
           message: comment.message,
           imageUrl: comment.imageUrl,
+          replyTo: comment.replyTo,
           createdAt: comment.createdAt.toISOString()
         });
 
         ack?.({ ok: true, data: comment });
-        console.log(`[socket] add_comment success for marketId: ${marketId}, wallet: ${wallet}`);
+        console.log(`[socket] add_comment success for marketId: ${marketId}, wallet: ${wallet}, replyTo: ${replyTo || 'none'}`);
       } catch (err) {
         const e = err as Error;
         console.error(`[socket] add_comment error for marketId: ${marketId}, wallet: ${wallet}`, e.message);
@@ -91,6 +103,48 @@ export function registerCommentHandlers(io: Server<ClientEvents, ServerEvents>, 
       } catch (err) {
         const e = err as Error;
         console.error(`[socket] get_comments error for marketId: ${marketId}`, e.message);
+        ack?.({ ok: false, error: e.message });
+      }
+    }
+  );
+
+  socket.on(
+    "like_comment",
+    async (
+      { commentId, wallet }: { commentId: string; wallet: string },
+      ack?: (result: AckResult) => void
+    ) => {
+      try {
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+          throw new Error("Comment not found");
+        }
+
+        const isLiked = comment.likes.includes(wallet);
+        
+        if (isLiked) {
+          // Unlike: remove wallet from likes array
+          comment.likes = comment.likes.filter(like => like !== wallet);
+        } else {
+          // Like: add wallet to likes array
+          comment.likes.push(wallet);
+        }
+
+        await comment.save();
+
+        // Broadcast like/unlike to all users in the market room
+        io.to(comment.marketId).emit("comment_liked", {
+          commentId,
+          wallet,
+          isLiked: !isLiked,
+          likesCount: comment.likes.length
+        });
+
+        ack?.({ ok: true, data: { isLiked: !isLiked, likesCount: comment.likes.length } });
+        console.log(`[socket] like_comment success for commentId: ${commentId}, wallet: ${wallet}, isLiked: ${!isLiked}`);
+      } catch (err) {
+        const e = err as Error;
+        console.error(`[socket] like_comment error for commentId: ${commentId}, wallet: ${wallet}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }

@@ -9,14 +9,11 @@ import { registerUserHandlers } from "./userHandlers";
 import { registerWebRTCHandlers } from "./webrtcHandlers";
 
 export function registerSocketHandlers(io: Server<ClientEvents, ServerEvents>, socket: Socket<ClientEvents, ServerEvents>): void {
-  // Reduced logging - only log important events
   console.log(`[socket] New connection: ${socket.id}`);
-  
   socket.on("disconnect", (reason) => {
     console.log(`[socket] Disconnected: ${socket.id} (${reason})`);
   });
-
-  // Register all handler modules
+  
   registerMarketHandlers(io, socket);
   registerMessagingHandlers(io, socket);
   registerCommentHandlers(io, socket);

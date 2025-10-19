@@ -5,6 +5,8 @@ export interface CommentDoc extends Document {
   wallet: string;
   message?: string;
   imageUrl?: string;
+  replyTo?: string; // Reference to parent comment ID
+  likes: string[]; // Array of wallet addresses who liked this comment
   createdAt: Date;
   updatedAt: Date;
 }
@@ -14,6 +16,8 @@ const CommentSchema = new Schema<CommentDoc>({
   wallet: { type: String, required: true },
   message: { type: String, maxlength: 1000 },
   imageUrl: { type: String },
+  replyTo: { type: String, ref: 'Comment' }, // Reference to parent comment
+  likes: [{ type: String }], // Array of wallet addresses
 }, {
   timestamps: true,
 });

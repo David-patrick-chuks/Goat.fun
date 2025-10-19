@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { getSocket } from "@/lib/socket";
-import type { WebRTCOffer, WebRTCAnswer, WebRTCIceCandidate, WebRTCViewerEvent } from "@/lib/types";
+import type { WebRTCAnswer, WebRTCIceCandidate, WebRTCOffer, WebRTCViewerEvent } from "@/lib/types";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseWebRTCProps {
   marketId: string;
@@ -38,7 +38,9 @@ export function useWebRTC({ marketId, wallet, isStreamer, isStreaming }: UseWebR
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
     ],
+    iceCandidatePoolSize: 10,
   };
 
   // Create peer connection
@@ -48,21 +50,40 @@ export function useWebRTC({ marketId, wallet, isStreamer, isStreaming }: UseWebR
     // Handle ICE candidates
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log(`[webrtc] Sending ICE candidate to ${targetWallet}`);
+        console.log(`[webrtc] Sending ICE candidate to ${targetWallet}:`, event.candidate);
         socket.emit('webrtc_ice_candidate', {
           marketId,
           fromWallet: wallet,
           toWallet: targetWallet,
           candidate: event.candidate
         });
+      } else {
+        console.log(`[webrtc] ICE gathering completed for ${targetWallet}`);
+      }
+    };
+
+    // Handle ICE connection state changes
+    peerConnection.oniceconnectionstatechange = () => {
+      console.log(`[webrtc] ICE connection state with ${targetWallet}: ${peerConnection.iceConnectionState}`);
+      if (peerConnection.iceConnectionState === 'failed') {
+        console.error(`[webrtc] ICE connection failed with ${targetWallet}`);
+        setError(`ICE connection failed with ${targetWallet}`);
       }
     };
 
     // Handle remote stream
     peerConnection.ontrack = (event) => {
-      console.log(`[webrtc] Received remote stream from ${targetWallet}`);
+      console.log(`[webrtc] Received remote stream from ${targetWallet}`, event);
       const [remoteStream] = event.streams;
-      setRemoteStreams(prev => new Map(prev).set(targetWallet, remoteStream));
+      if (remoteStream) {
+        console.log(`[webrtc] Remote stream has ${remoteStream.getTracks().length} tracks`);
+        remoteStream.getTracks().forEach(track => {
+          console.log(`[webrtc] Track: ${track.kind}, enabled: ${track.enabled}, readyState: ${track.readyState}`);
+        });
+        setRemoteStreams(prev => new Map(prev).set(targetWallet, remoteStream));
+      } else {
+        console.error(`[webrtc] No remote stream received from ${targetWallet}`);
+      }
     };
 
     // Handle connection state changes
@@ -131,10 +152,21 @@ export function useWebRTC({ marketId, wallet, isStreamer, isStreaming }: UseWebR
       setIsConnecting(true);
       setError(null);
       
+      // Close any existing connection to this streamer
+      const existingConnection = peerConnections.current.get(streamerWallet);
+      if (existingConnection) {
+        console.log(`[webrtc] Closing existing connection to ${streamerWallet}`);
+        existingConnection.close();
+        peerConnections.current.delete(streamerWallet);
+      }
+      
       const peerConnection = createPeerConnection(streamerWallet);
       
-      // Create offer
-      const offer = await peerConnection.createOffer();
+      // Create offer with better constraints
+      const offer = await peerConnection.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      });
       await peerConnection.setLocalDescription(offer);
       
       // Send offer to streamer
@@ -147,16 +179,27 @@ export function useWebRTC({ marketId, wallet, isStreamer, isStreaming }: UseWebR
       
       console.log(`[webrtc] Offer sent to streamer: ${streamerWallet}`);
       
-      // Set a timeout to check if connection was established
-      setTimeout(() => {
+      // Set a timeout to check connection state
+      const connectionTimeout = setTimeout(() => {
         if (peerConnection.connectionState === 'connecting') {
-          console.log(`[webrtc] Still connecting to ${streamerWallet}...`);
+          console.log(`[webrtc] Connection timeout - still connecting to ${streamerWallet}`);
+          setError(`Connection timeout to ${streamerWallet}`);
         } else if (peerConnection.connectionState === 'connected') {
           console.log(`[webrtc] Successfully connected to ${streamerWallet}`);
         } else {
           console.log(`[webrtc] Connection state: ${peerConnection.connectionState}`);
+          if (peerConnection.connectionState === 'failed') {
+            setError(`Connection failed to ${streamerWallet}`);
+          }
         }
-      }, 5000);
+      }, 10000); // 10 second timeout
+      
+      // Clear timeout when connection succeeds
+      peerConnection.onconnectionstatechange = () => {
+        if (peerConnection.connectionState === 'connected') {
+          clearTimeout(connectionTimeout);
+        }
+      };
       
     } catch (err) {
       const error = err as Error;
@@ -190,14 +233,19 @@ export function useWebRTC({ marketId, wallet, isStreamer, isStreaming }: UseWebR
 
     // Handle WebRTC offer (for streamer)
     const handleOffer = async (data: WebRTCOffer) => {
-      if (!isStreamer || !localStream) return;
+      if (!isStreamer || !localStream) {
+        console.log(`[webrtc] Cannot handle offer: isStreamer=${isStreamer}, hasLocalStream=${!!localStream}`);
+        return;
+      }
       
       try {
-        console.log(`[webrtc] Received offer from ${data.fromWallet}`);
+        console.log(`[webrtc] Received offer from ${data.fromWallet}`, data.offer);
         const peerConnection = createPeerConnection(data.fromWallet);
         
         // Add local stream to peer connection BEFORE setting remote description
+        console.log(`[webrtc] Adding ${localStream.getTracks().length} tracks to peer connection`);
         localStream.getTracks().forEach(track => {
+          console.log(`[webrtc] Adding track: ${track.kind}, enabled: ${track.enabled}`);
           peerConnection.addTrack(track, localStream);
         });
         
@@ -213,7 +261,7 @@ export function useWebRTC({ marketId, wallet, isStreamer, isStreaming }: UseWebR
           answer
         });
         
-        console.log(`[webrtc] Answer sent to ${data.fromWallet}`);
+        console.log(`[webrtc] Answer sent to ${data.fromWallet}`, answer);
       } catch (err) {
         console.error(`[webrtc] Error handling offer from ${data.fromWallet}:`, err);
       }

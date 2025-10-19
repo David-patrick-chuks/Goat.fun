@@ -18,7 +18,6 @@ async function bootstrap() {
     console.log("[db] ready");
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)({ origin: env_1.env.CORS_ORIGIN }));
-    // Health route
     app.get("/health", (_req, res) => {
         res.json({ ok: true, db: require("mongoose").connection.readyState === 1 ? "connected" : "disconnected" });
     });
@@ -29,7 +28,6 @@ async function bootstrap() {
     io.on("connection", (socket) => {
         (0, handlers_1.registerSocketHandlers)(io, socket);
     });
-    // Expiry job: check every 10 seconds
     setInterval(async () => {
         const actives = await Market_1.Market.find({ status: "active" });
         for (const m of actives) {

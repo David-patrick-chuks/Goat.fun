@@ -37,6 +37,7 @@ export default function MarketDetails() {
 
   // Refs
   const videoElementRef = React.useRef<HTMLVideoElement>(null);
+  const autoStartAttempted = React.useRef(false);
 
   // Get market data first
   const {
@@ -104,6 +105,14 @@ export default function MarketDetails() {
     }
   }, [localStream]);
 
+  // Auto-connect viewers to streamer when market is live
+  React.useEffect(() => {
+    if (market?.livestream?.isLive && market.creator && !isStreamer && address && connectToStreamer) {
+      console.log('[market] Auto-connecting viewer to streamer:', market.creator);
+      connectToStreamer(market.creator);
+    }
+  }, [market?.livestream?.isLive, market?.creator, isStreamer, address, connectToStreamer]);
+
   // Socket event handlers
   React.useEffect(() => {
     if (!marketId) return;
@@ -161,10 +170,20 @@ export default function MarketDetails() {
 
   // Auto-start stream when market is live and user is streamer
   React.useEffect(() => {
-    if (market?.livestream?.isLive && market.creator === address && !isStreaming) {
+    if (market?.livestream?.isLive && market.creator === address && !isStreaming && !autoStartAttempted.current) {
       console.log('Auto-starting stream for live market');
-      startWebRTCStream();
-      setIsStreaming(true);
+      autoStartAttempted.current = true;
+      
+      const startStream = async () => {
+        try {
+          await startWebRTCStream();
+          setIsStreaming(true);
+        } catch (error) {
+          console.error('Failed to auto-start stream:', error);
+          autoStartAttempted.current = false; // Reset on failure
+        }
+      };
+      startStream();
     }
   }, [market?.livestream?.isLive, market?.creator, address, isStreaming, startWebRTCStream]);
 
@@ -175,17 +194,23 @@ export default function MarketDetails() {
       alert('Please connect your wallet to start streaming');
       return;
     }
-    const socket = getSocket();
-    socket.emit('start_stream', { marketId, wallet: address }, (res: Ack<{ streamKey: string; playbackUrl: string; roomName: string }>) => {
-      if (res?.ok && res.data) {
-        console.log('Stream started:', res.data);
-        setIsStreaming(true);
-        startWebRTCStream();
-      } else {
-        console.error('Failed to start stream:', res?.error);
-        alert(`Failed to start stream: ${res?.error}`);
-      }
-    });
+    
+    try {
+      const socket = getSocket();
+      socket.emit('start_stream', { marketId, wallet: address }, (res: Ack<{ streamKey: string; playbackUrl: string; roomName: string }>) => {
+        if (res?.ok && res.data) {
+          console.log('Stream started:', res.data);
+          setIsStreaming(true);
+          startWebRTCStream();
+        } else {
+          console.error('Failed to start stream:', res?.error);
+          alert(`Failed to start stream: ${res?.error || 'Unknown error'}`);
+        }
+      });
+    } catch (error) {
+      console.error('Error starting stream:', error);
+      alert(`Failed to start stream: ${error}`);
+    }
   };
 
   const stopStreaming = async () => {
@@ -200,6 +225,7 @@ export default function MarketDetails() {
     // Stop WebRTC stream immediately for better UX
     console.log('Stopping stream immediately...');
     setIsStreaming(false);
+    autoStartAttempted.current = false; // Reset auto-start flag
     stopWebRTCStream();
     
     // Then update backend

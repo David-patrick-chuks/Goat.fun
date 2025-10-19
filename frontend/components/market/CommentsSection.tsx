@@ -10,6 +10,8 @@ interface Comment {
   wallet: string;
   message?: string;
   imageUrl?: string;
+  replyTo?: string;
+  likes: string[];
   createdAt: string;
 }
 
@@ -63,7 +65,12 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
 
     socket.on("comment_added", (comment: Comment) => {
       if (comment.marketId === marketId) {
-        setComments(prev => [comment, ...prev]);
+        setComments(prev => {
+          // Check if comment already exists (to avoid duplicates from temp comments)
+          const exists = prev.some(c => c._id === comment._id || (c._id.startsWith('temp-') && c.wallet === comment.wallet && c.message === comment.message));
+          if (exists) return prev;
+          return [comment, ...prev];
+        });
         // Auto-scroll to top for new comments
         if (commentsContainerRef.current) {
           commentsContainerRef.current.scrollTop = 0;
@@ -131,6 +138,16 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
             if (res?.ok) {
               setMessage("");
               removeImage();
+              // Add comment immediately to UI for better UX
+              const tempComment: Comment = {
+                _id: `temp-${Date.now()}`,
+                marketId: marketId,
+                wallet: address,
+                message: message.trim() || undefined,
+                imageUrl: imagePreview || undefined,
+                createdAt: new Date().toISOString()
+              };
+              setComments(prev => [tempComment, ...prev]);
             } else {
               console.error('Failed to add comment:', res?.error);
               alert(`Failed to add comment: ${res?.error}`);
@@ -147,6 +164,15 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
           setIsSubmitting(false);
           if (res?.ok) {
             setMessage("");
+            // Add comment immediately to UI for better UX
+            const tempComment: Comment = {
+              _id: `temp-${Date.now()}`,
+              marketId: marketId,
+              wallet: address,
+              message: message.trim(),
+              createdAt: new Date().toISOString()
+            };
+            setComments(prev => [tempComment, ...prev]);
           } else {
             console.error('Failed to add comment:', res?.error);
             alert(`Failed to add comment: ${res?.error}`);
