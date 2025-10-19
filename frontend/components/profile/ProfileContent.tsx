@@ -4,6 +4,7 @@ import { getSocket } from "@/lib/socket";
 import type { Ack } from "@/lib/types";
 import React from "react";
 import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import EditProfileModal from "./EditProfileModal";
 
 interface Market {
@@ -61,6 +62,7 @@ interface Comment {
 
 export default function ProfileContent() {
   const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const [username, setUsername] = React.useState<string>("");
   const [bio, setBio] = React.useState<string>("");
   const [avatarUrl, setAvatarUrl] = React.useState<string>("");
@@ -96,6 +98,74 @@ export default function ProfileContent() {
   const [isLoadingFollowers, setIsLoadingFollowers] = React.useState(false);
   const [followersPage, setFollowersPage] = React.useState(1);
   const [followingPage, setFollowingPage] = React.useState(1);
+
+  // Authentication check - show login prompt if not connected
+  if (!isConnected || !address) {
+    return (
+      <div className="flex min-h-screen bg-black items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          {/* Logo */}
+          <div className="mb-8">
+            <img src="/goatfun.png" alt="GoatFun" className="w-16 h-16 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-white mb-2">GoatFun</h1>
+            <p className="text-white/60">Connect your wallet to view your profile</p>
+          </div>
+
+          {/* Login Card */}
+          <div className="bg-white/5 rounded-lg p-8 border border-white/10">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
+              <p className="text-white/70 text-sm">
+                You need to connect your wallet to access your profile, view your tokens, and manage your markets.
+              </p>
+            </div>
+
+            {/* Connect Button */}
+            <button
+              onClick={openConnectModal}
+              className="w-full bg-[#ffea00] text-black font-semibold py-3 px-6 rounded-lg hover:bg-[#ffea00]/80 transition-colors mb-4"
+            >
+              Connect Wallet
+            </button>
+
+            {/* Additional Info */}
+            <div className="text-center">
+              <p className="text-white/50 text-xs">
+                By connecting your wallet, you agree to our{" "}
+                <a href="/terms-of-service" className="text-[#ffea00] hover:underline">
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a href="/privacy-policy" className="text-[#ffea00] hover:underline">
+                  Privacy Policy
+                </a>
+              </p>
+            </div>
+          </div>
+
+          {/* Features Preview */}
+          <div className="mt-8 grid grid-cols-1 gap-4 text-left">
+            <div className="flex items-center gap-3 text-white/70">
+              <div className="w-2 h-2 bg-[#ffea00] rounded-full"></div>
+              <span className="text-sm">View your token portfolio</span>
+            </div>
+            <div className="flex items-center gap-3 text-white/70">
+              <div className="w-2 h-2 bg-[#ffea00] rounded-full"></div>
+              <span className="text-sm">Track your created markets</span>
+            </div>
+            <div className="flex items-center gap-3 text-white/70">
+              <div className="w-2 h-2 bg-[#ffea00] rounded-full"></div>
+              <span className="text-sm">Manage your profile settings</span>
+            </div>
+            <div className="flex items-center gap-3 text-white/70">
+              <div className="w-2 h-2 bg-[#ffea00] rounded-full"></div>
+              <span className="text-sm">Follow other traders</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Copy wallet address functionality
   const copyWalletAddress = () => {

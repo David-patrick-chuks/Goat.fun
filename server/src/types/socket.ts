@@ -59,11 +59,11 @@ export interface ServerEvents {
   market_update: (data: MarketUpdateEvent) => void;
   market_created: (data: { marketId: string }) => void;
   stream_update: (data: { marketId: string; isLive: boolean }) => void;
-  chat_message: (data: { marketId: string; wallet: string; message: string; at: string }) => void;
+  chat_message: (data: { marketId: string; wallet: string; username?: string; message: string; at: string }) => void;
   join_request: (data: { marketId: string; wallet: string }) => void;
   join_request_accepted: (data: { marketId: string; streamerWallet: string }) => void;
   // Comment Events
-  comment_added: (data: { marketId: string; wallet: string; message?: string; imageUrl?: string; replyTo?: string; createdAt: string }) => void;
+  comment_added: (data: { marketId: string; wallet: string; username?: string; message?: string; imageUrl?: string; replyTo?: string; createdAt: string }) => void;
   comment_liked: (data: { commentId: string; wallet: string; isLiked: boolean; likesCount: number }) => void;
   // Chat Events
   message_sent: (data: { conversationId: string; message: { _id: string; sender: string; type: string; content?: string; imageUrl?: string; marketId?: string; userId?: string; gifUrl?: string; emoji?: string; replyTo?: string; createdAt: string } }) => void;

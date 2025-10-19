@@ -1,5 +1,18 @@
 "use client";
 
+import {
+  Camera,
+  MessageCircle,
+  MoreVertical,
+  Phone,
+  Send,
+  Smile,
+  TrendingUp,
+  User,
+  Users,
+  Video,
+  X
+} from "lucide-react";
 import React from "react";
 
 interface Participant {
@@ -170,35 +183,37 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
 
   if (!conversation) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-900">
+      <div className="flex-1 flex items-center justify-center bg-black">
         <div className="text-center">
-          <div className="text-6xl mb-4">💬</div>
-          <h2 className="text-xl font-semibold mb-2">Welcome to Chat</h2>
-          <p className="text-gray-400">Select a conversation to start messaging</p>
+          <div className="w-24 h-24 bg-[#ffea00] rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <MessageCircle className="w-12 h-12 text-black" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">Welcome to Chat</h2>
+          <p className="text-white/70 text-lg">Select a conversation to start messaging</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-900">
+    <div className="flex-1 flex flex-col bg-black">
       {/* Header */}
-      <div className="p-4 border-b border-gray-700 bg-gray-800">
-        <div className="flex items-center gap-3">
+      <div className="p-6 border-b border-white/10 bg-white/5">
+        <div className="flex items-center gap-4">
           {/* Avatar */}
           <div className="relative">
             {conversation.type === 'group' ? (
-              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center text-lg font-semibold">
-                {conversation.name?.charAt(0).toUpperCase() || 'G'}
+              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-lg font-bold">
+                <Users className="w-6 h-6 text-[#ffea00]" />
               </div>
             ) : (
                 (() => {
                   const otherParticipant = conversation.participants[0]; // For now, just take the first participant
                   const avatar = otherParticipant?.avatarUrl;
                   return avatar ? (
-                    <img src={avatar} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
+                    <img src={avatar} alt="Avatar" className="w-12 h-12 rounded-2xl object-cover" />
                   ) : (
-                    <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center text-lg font-semibold">
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-lg font-bold">
                       {otherParticipant?.username?.charAt(0).toUpperCase() || otherParticipant?.wallet.slice(0, 2).toUpperCase() || '?'}
                     </div>
                   );
@@ -209,14 +224,14 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
             {conversation.type === 'direct' && (() => {
               const otherParticipant = conversation.participants[0]; // For now, just take the first participant
               return otherParticipant?.isOnline && (
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-gray-800 rounded-full"></div>
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-black rounded-full"></div>
               );
             })()}
           </div>
 
           {/* Info */}
           <div className="flex-1">
-            <h2 className="font-semibold text-lg">
+            <h2 className="font-bold text-xl text-white">
               {conversation.type === 'group' 
                 ? conversation.name || 'Group Chat'
                 : (() => {
@@ -228,7 +243,7 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
             {conversation.type === 'direct' && (() => {
               const otherParticipant = conversation.participants[0]; // For now, just take the first participant
               return (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-white/70">
                   {otherParticipant?.isOnline ? 'Online' : `Last seen ${formatTime(otherParticipant?.lastSeen || '')}`}
                 </p>
               );
@@ -237,26 +252,38 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
 
           {/* Actions */}
           <div className="flex gap-2">
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-              📞
+            <button 
+              className="p-3 hover:bg-white/5 rounded-xl transition-colors"
+              title="Voice call"
+              aria-label="Start voice call"
+            >
+              <Phone className="w-5 h-5 text-white/70" />
             </button>
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-              📹
+            <button 
+              className="p-3 hover:bg-white/5 rounded-xl transition-colors"
+              title="Video call"
+              aria-label="Start video call"
+            >
+              <Video className="w-5 h-5 text-white/70" />
             </button>
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-              ⋮
+            <button 
+              className="p-3 hover:bg-white/5 rounded-xl transition-colors"
+              title="More options"
+              aria-label="More options"
+            >
+              <MoreVertical className="w-5 h-5 text-white/70" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {Object.entries(groupedMessages).map(([date, dateMessages]) => (
           <div key={date}>
             {/* Date separator */}
-            <div className="flex items-center justify-center mb-4">
-              <div className="bg-gray-700 text-gray-300 text-xs px-3 py-1 rounded-full">
+            <div className="flex items-center justify-center mb-6">
+              <div className="bg-white/5 text-white/70 text-sm px-4 py-2 rounded-full border border-white/10">
                 {date}
               </div>
             </div>
@@ -269,38 +296,38 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
               const showAvatar = !prevMessage || prevMessage.sender !== message.sender;
 
               return (
-                <div key={message._id} className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                <div key={message._id} className={`flex gap-4 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                   {/* Avatar (only for other users) */}
                   {!isCurrentUser && (
                     <div className="flex-shrink-0">
                       {showAvatar ? (
-                        <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
+                        <div className="w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center text-sm font-bold">
                           {participant?.avatarUrl ? (
-                            <img src={participant.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-full object-cover" />
+                            <img src={participant.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-2xl object-cover" />
                           ) : (
                             participant?.username?.charAt(0).toUpperCase() || participant?.wallet.slice(0, 2).toUpperCase() || '?'
                           )}
                         </div>
                       ) : (
-                        <div className="w-8 h-8"></div>
+                        <div className="w-10 h-10"></div>
                       )}
                     </div>
                   )}
 
                   {/* Message content */}
-                  <div className={`max-w-xs lg:max-w-md ${isCurrentUser ? 'order-first' : ''}`}>
+                  <div className={`max-w-xs sm:max-w-sm lg:max-w-lg ${isCurrentUser ? 'order-first' : ''}`}>
                     {/* Sender name (only for other users) */}
                     {!isCurrentUser && showAvatar && (
-                      <p className="text-xs text-gray-400 mb-1">
+                      <p className="text-sm text-white/70 mb-2 font-medium">
                         {participant?.username || participant?.wallet.slice(0, 6) + '...'}
                       </p>
                     )}
 
                     {/* Message bubble */}
-                    <div className={`rounded-lg p-3 ${
+                    <div className={`rounded-2xl p-4 shadow-lg ${
                       isCurrentUser 
                         ? 'bg-[#ffea00] text-black' 
-                        : 'bg-gray-700 text-white'
+                        : 'bg-white/5 text-white border border-white/10'
                     }`}>
                       {message.type === 'text' && (
                         <p className="text-sm">{message.content}</p>
@@ -326,22 +353,32 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
                       )}
 
                       {message.type === 'market' && (
-                        <div className="bg-gray-600 rounded-lg p-2">
-                          <p className="text-sm font-semibold">📈 Market Shared</p>
-                          <p className="text-xs text-gray-300">Market ID: {message.marketId}</p>
+                        <div className={`rounded-xl p-3 ${
+                          isCurrentUser ? 'bg-white/10' : 'bg-white/10'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <TrendingUp className="w-4 h-4" />
+                            <p className="text-sm font-semibold">Market Shared</p>
+                          </div>
+                          <p className="text-xs opacity-70">Market ID: {message.marketId}</p>
                         </div>
                       )}
 
                       {message.type === 'user' && (
-                        <div className="bg-gray-600 rounded-lg p-2">
-                          <p className="text-sm font-semibold">👤 User Shared</p>
-                          <p className="text-xs text-gray-300">User ID: {message.userId}</p>
+                        <div className={`rounded-xl p-3 ${
+                          isCurrentUser ? 'bg-white/10' : 'bg-white/10'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <User className="w-4 h-4" />
+                            <p className="text-sm font-semibold">User Shared</p>
+                          </div>
+                          <p className="text-xs opacity-70">User ID: {message.userId}</p>
                         </div>
                       )}
                     </div>
 
                     {/* Timestamp */}
-                    <p className={`text-xs text-gray-400 mt-1 ${
+                    <p className={`text-xs text-white/60 mt-1 ${
                       isCurrentUser ? 'text-right' : 'text-left'
                     }`}>
                       {formatTime(message.createdAt)}
@@ -357,24 +394,26 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
       </div>
 
       {/* Message Input */}
-      <div className="p-4 border-t border-gray-700 bg-gray-800">
+      <div className="p-6 border-t border-white/10 bg-white/5">
         {/* Image Preview */}
         {imagePreview && (
-          <div className="mb-3 relative">
-            <img src={imagePreview} alt="Preview" className="max-w-xs max-h-32 rounded-lg object-cover" />
+          <div className="mb-4 relative">
+            <img src={imagePreview} alt="Preview" className="max-w-xs max-h-32 rounded-xl object-cover" />
             <button
               onClick={removeImage}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-600 transition-colors"
+              title="Remove image"
+              aria-label="Remove image"
             >
-              ×
+              <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
         {/* Emoji Picker */}
         {showEmojiPicker && (
-          <div className="mb-3 p-3 bg-gray-700 rounded-lg">
-            <div className="flex flex-wrap gap-2">
+          <div className="mb-4 p-4 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex flex-wrap gap-3">
               {commonEmojis.map(emoji => (
                 <button
                   key={emoji}
@@ -382,7 +421,7 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
                     onSendMessage({ type: 'emoji', emoji });
                     setShowEmojiPicker(false);
                   }}
-                  className="text-xl hover:bg-gray-600 rounded p-1"
+                  className="text-2xl hover:bg-white/10 rounded-lg p-2 transition-colors"
                 >
                   {emoji}
                 </button>
@@ -391,7 +430,7 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
           </div>
         )}
 
-        <form onSubmit={sendMessage} className="flex gap-2">
+        <form onSubmit={sendMessage} className="flex gap-2 sm:gap-3">
           {/* File Input */}
           <input
             ref={fileInputRef}
@@ -403,32 +442,40 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
           />
 
           {/* Action Buttons */}
-          <div className="flex gap-1">
+          <div className="flex gap-1 sm:gap-2">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-3 hover:bg-white/5 rounded-xl transition-colors"
+              title="Upload image"
+              aria-label="Upload image"
             >
-              📷
+              <Camera className="w-5 h-5 text-white/70" />
             </button>
             <button
               type="button"
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-3 hover:bg-white/5 rounded-xl transition-colors"
+              title="Add emoji"
+              aria-label="Add emoji"
             >
-              😀
+              <Smile className="w-5 h-5 text-white/70" />
             </button>
             <button
               type="button"
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-3 hover:bg-white/5 rounded-xl transition-colors"
+              title="Share market"
+              aria-label="Share market"
             >
-              📈
+              <TrendingUp className="w-5 h-5 text-white/70" />
             </button>
             <button
               type="button"
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-3 hover:bg-white/5 rounded-xl transition-colors"
+              title="Share user"
+              aria-label="Share user"
             >
-              👤
+              <User className="w-5 h-5 text-white/70" />
             </button>
           </div>
 
@@ -438,15 +485,16 @@ export default function ChatMain({ conversation, messages, currentUserWallet, on
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-[#ffea00]"
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:border-[#ffea00] focus:bg-white/10 transition-all duration-200"
           />
 
           {/* Send Button */}
           <button
             type="submit"
             disabled={!messageInput.trim() && !imageFile}
-            className="px-4 py-2 bg-[#ffea00] text-black rounded-lg font-semibold hover:bg-[#ffd700] disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-3 bg-[#ffea00] text-black rounded-xl font-bold hover:bg-[#ffea00]/90 disabled:bg-white/10 disabled:text-white/50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-[#ffea00]/25 flex items-center gap-2"
           >
+            <Send className="w-4 h-4" />
             Send
           </button>
         </form>

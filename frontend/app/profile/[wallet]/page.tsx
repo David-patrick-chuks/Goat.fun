@@ -2,6 +2,7 @@
 
 import { getSocket } from "@/lib/socket";
 import type { Ack } from "@/lib/types";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import React from "react";
 import { useAccount } from "wagmi";
@@ -31,9 +32,14 @@ interface Market {
   createdAt: string;
 }
 
+interface FollowRelation {
+  follower: User;
+  following: User;
+}
+
 export default function ProfilePage() {
   const params = useParams();
-  const wallet = params.wallet as string;
+  const identifier = params.wallet as string; // This could be wallet or username
   const { address } = useAccount();
 
   // State
@@ -47,13 +53,13 @@ export default function ProfilePage() {
 
   // Load user data
   const loadUserData = React.useCallback(() => {
-    if (!wallet) return;
+    if (!identifier) return;
 
     setLoading(true);
     const socket = getSocket();
 
     // Load user profile
-    socket.emit('get_user', { wallet }, (res: Ack<User>) => {
+    socket.emit('get_user', { identifier }, (res: Ack<User>) => {
       if (res?.ok && res.data) {
         setUser(res.data);
       }
@@ -65,39 +71,39 @@ export default function ProfilePage() {
       status: 'active', 
       limit: 50, 
       sort: 'newest',
-      search: wallet // This will need to be updated to search by creator
+      search: identifier // This will need to be updated to search by creator
     }, (res: Ack<{ items: Market[]; total: number }>) => {
       if (res?.ok && res.data) {
         // Filter markets by creator (since we don't have creator search yet)
-        const userMarkets = res.data.items.filter(market => market.creator === wallet);
+        const userMarkets = res.data.items.filter(market => market.creator === identifier);
         setMarkets(userMarkets);
       }
     });
 
     // Load followers
-    socket.emit('get_followers', { wallet }, (res: Ack<any[]>) => {
+    socket.emit('get_followers', { identifier }, (res: Ack<FollowRelation[]>) => {
       if (res?.ok && Array.isArray(res.data)) {
         setFollowers(res.data.map(f => f.follower));
       }
     });
 
     // Load following
-    socket.emit('get_following', { wallet }, (res: Ack<any[]>) => {
+    socket.emit('get_following', { identifier }, (res: Ack<FollowRelation[]>) => {
       if (res?.ok && Array.isArray(res.data)) {
         setFollowing(res.data.map(f => f.following));
       }
     });
 
     // Check if current user is following this user
-    if (address && address !== wallet) {
-      socket.emit('get_following', { wallet: address }, (res: Ack<any[]>) => {
+    if (address && address !== identifier) {
+      socket.emit('get_following', { wallet: address }, (res: Ack<FollowRelation[]>) => {
         if (res?.ok && Array.isArray(res.data)) {
-          const isFollowingUser = res.data.some(f => f.following.wallet === wallet);
+          const isFollowingUser = res.data.some(f => f.following.wallet === identifier);
           setIsFollowing(isFollowingUser);
         }
       });
     }
-  }, [wallet, address]);
+  }, [identifier, address]);
 
   // Load data on mount
   React.useEffect(() => {
@@ -111,7 +117,7 @@ export default function ProfilePage() {
     const socket = getSocket();
     
     if (isFollowing) {
-      socket.emit('unfollow_user', { follower: address, following: wallet }, (res: Ack) => {
+      socket.emit('unfollow_user', { follower: address, following: identifier }, (res: Ack) => {
         if (res?.ok) {
           setIsFollowing(false);
           setUser(prev => prev ? {
@@ -121,7 +127,7 @@ export default function ProfilePage() {
         }
       });
     } else {
-      socket.emit('follow_user', { follower: address, following: wallet }, (res: Ack) => {
+      socket.emit('follow_user', { follower: address, following: identifier }, (res: Ack) => {
         if (res?.ok) {
           setIsFollowing(true);
           setUser(prev => prev ? {
@@ -174,7 +180,7 @@ export default function ProfilePage() {
     );
   }
 
-  const isOwnProfile = address === wallet;
+  const isOwnProfile = address === identifier;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -185,9 +191,11 @@ export default function ProfilePage() {
             {/* Avatar */}
             <div className="relative">
               {user.avatarUrl ? (
-                <img 
+                <Image 
                   src={user.avatarUrl} 
                   alt="Profile" 
+                  width={96}
+                  height={96}
                   className="w-24 h-24 rounded-full object-cover border-4 border-white/20"
                 />
               ) : (
@@ -302,9 +310,11 @@ export default function ProfilePage() {
                 <div key={market._id} className="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:border-gray-600 transition-colors">
                   <div className="flex items-start gap-4">
                     {market.banner && (
-                      <img 
+                      <Image 
                         src={market.banner} 
                         alt="Market Banner" 
+                        width={64}
+                        height={64}
                         className="w-16 h-16 rounded-lg object-cover"
                       />
                     )}
@@ -345,7 +355,7 @@ export default function ProfilePage() {
                 <div key={follower.wallet} className="bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors">
                   <div className="flex items-center gap-3">
                     {follower.avatarUrl ? (
-                      <img src={follower.avatarUrl} alt="Avatar" className="w-12 h-12 rounded-full object-cover" />
+                      <Image src={follower.avatarUrl} alt="Avatar" width={48} height={48} className="w-12 h-12 rounded-full object-cover" />
                     ) : (
                       <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
                         {follower.username?.charAt(0).toUpperCase() || follower.wallet.slice(0, 2).toUpperCase()}
@@ -382,7 +392,7 @@ export default function ProfilePage() {
                 <div key={followingUser.wallet} className="bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors">
                   <div className="flex items-center gap-3">
                     {followingUser.avatarUrl ? (
-                      <img src={followingUser.avatarUrl} alt="Avatar" className="w-12 h-12 rounded-full object-cover" />
+                      <Image src={followingUser.avatarUrl} alt="Avatar" width={48} height={48} className="w-12 h-12 rounded-full object-cover" />
                     ) : (
                       <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
                         {followingUser.username?.charAt(0).toUpperCase() || followingUser.wallet.slice(0, 2).toUpperCase()}

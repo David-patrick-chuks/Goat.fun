@@ -1,5 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { Comment } from "../../models/Comment";
+import { User } from "../../models/User";
 import { uploadImageFromBuffer } from "../../services/uploadService";
 import type { AckResult, ClientEvents, ServerEvents } from "../../types/socket";
 
@@ -39,6 +40,10 @@ export function registerCommentHandlers(io: Server<ClientEvents, ServerEvents>, 
           imageUrl = uploadResult.secure_url;
         }
 
+        // Get user info to include username
+        const user = await User.findOne({ wallet }).lean();
+        const username = user?.username;
+
         // Create comment
         const comment = await Comment.create({
           marketId,
@@ -53,6 +58,7 @@ export function registerCommentHandlers(io: Server<ClientEvents, ServerEvents>, 
         io.to(marketId).emit("comment_added", {
           marketId,
           wallet,
+          username,
           message: comment.message,
           imageUrl: comment.imageUrl,
           replyTo: comment.replyTo,

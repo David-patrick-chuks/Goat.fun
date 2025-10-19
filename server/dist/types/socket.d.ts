@@ -207,7 +207,14 @@ export interface ServerEvents {
         wallet: string;
         message?: string;
         imageUrl?: string;
+        replyTo?: string;
         createdAt: string;
+    }) => void;
+    comment_liked: (data: {
+        commentId: string;
+        wallet: string;
+        isLiked: boolean;
+        likesCount: number;
     }) => void;
     message_sent: (data: {
         conversationId: string;
@@ -290,8 +297,8 @@ export interface CreateMarketPayload {
 export interface JoinMarketPayload {
     marketId: string;
     wallet: string;
-    side: Side;
-    shares: number;
+    side?: Side;
+    shares?: number;
 }
 export interface MarketUpdateEvent {
     marketId: string;

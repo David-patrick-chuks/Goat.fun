@@ -2,6 +2,7 @@
 
 import type { Livestream } from '@/lib/data/livestreams';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 
 interface LivestreamCardProps {
@@ -10,6 +11,12 @@ interface LivestreamCardProps {
 }
 
 const LivestreamCard: React.FC<LivestreamCardProps> = ({ livestream, className = '' }) => {
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push(`/market/${livestream.id}`);
+  };
+
   const formatMarketCap = (marketCap: number) => {
     if (marketCap >= 1000000) {
       return `$${(marketCap / 1000000).toFixed(1)}M`;
@@ -29,11 +36,14 @@ const LivestreamCard: React.FC<LivestreamCardProps> = ({ livestream, className =
   };
 
   return (
-    <div className={`
-      bg-black rounded-lg border border-white/10
-      hover:border-white/30 transition-colors cursor-pointer
-      ${className}
-    `}>
+    <div 
+      className={`
+        bg-black rounded-lg border border-white/10
+        hover:border-white/30 transition-colors cursor-pointer
+        ${className}
+      `}
+      onClick={handleClick}
+    >
       {/* Livestream Image with LIVE badge */}
       <div className="relative w-full aspect-video overflow-hidden rounded-t-lg">
         <Image

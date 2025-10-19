@@ -1,6 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { createMarket, getMarketDetail, joinMarket } from "../../services/marketService";
 import { uploadMarketMediaFromBuffer } from "../../services/uploadService";
+import { User } from "../../models/User";
 import type { AckResult, ClientEvents, CreateMarketPayload, JoinMarketPayload, ServerEvents } from "../../types/socket";
 
 export function registerMarketHandlers(io: Server<ClientEvents, ServerEvents>, socket: Socket<ClientEvents, ServerEvents>): void {
@@ -153,6 +154,43 @@ export function registerMarketHandlers(io: Server<ClientEvents, ServerEvents>, s
       } catch (err) {
         const e = err as Error;
         console.error(`[socket] upload_market_media error for marketId: ${marketId || 'temp'}, type: ${mediaType || 'unknown'}`, e.message);
+        ack?.({ ok: false, error: e.message });
+      }
+    }
+  );
+
+  // Chat message handler
+  socket.on(
+    "chat_message",
+    async (
+      { marketId, wallet, message }: { marketId: string; wallet: string; message: string },
+      ack?: (result: AckResult) => void
+    ) => {
+      try {
+        if (!socket.data.wallet || socket.data.wallet !== wallet) {
+          throw new Error("User not authenticated");
+        }
+
+        // Get user info to include username
+        const user = await User.findOne({ wallet }).lean();
+        const username = user?.username;
+
+        const messageData = {
+          marketId,
+          wallet,
+          username,
+          message,
+          at: new Date().toISOString()
+        };
+
+        // Broadcast to all users in the market room
+        socket.to(`market:${marketId}`).emit("chat_message", messageData);
+        
+        ack?.({ ok: true });
+        console.log(`[socket] chat_message success for marketId: ${marketId}, wallet: ${wallet}`);
+      } catch (err) {
+        const e = err as Error;
+        console.error(`[socket] chat_message error for marketId: ${marketId}, wallet: ${wallet}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }

@@ -5,6 +5,8 @@ import type { Ack } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import React from "react";
 import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { MessageCircle, Wallet, Users } from "lucide-react";
 
 // Import components
 import ChatMain from "./ChatMain";
@@ -47,8 +49,21 @@ interface Message {
   createdAt: string;
 }
 
+interface FollowingUser {
+  wallet: string;
+  username?: string;
+  avatarUrl?: string;
+  bio?: string;
+  followers: Array<{ wallet: string; username?: string }>;
+  following: Array<{ wallet: string; username?: string }>;
+  createdMarkets: string[];
+  isOnline: boolean;
+  lastSeen: string;
+}
+
 export default function ChatPage() {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const searchParams = useSearchParams();
   const conversationId = searchParams.get("conversationId");
 
@@ -58,7 +73,7 @@ export default function ChatPage() {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [showUserSearch, setShowUserSearch] = React.useState(false);
-  const [following, setFollowing] = React.useState<any[]>([]);
+  const [following, setFollowing] = React.useState<FollowingUser[]>([]);
 
   // Load conversations
   const loadConversations = React.useCallback(() => {
@@ -88,7 +103,7 @@ export default function ChatPage() {
     if (!address) return;
     
     const socket = getSocket();
-    socket.emit('get_following', { wallet: address }, (res: Ack<any[]>) => {
+    socket.emit('get_following', { wallet: address }, (res: Ack<FollowingUser[]>) => {
       if (res?.ok && Array.isArray(res.data)) {
         setFollowing(res.data);
       }
@@ -232,42 +247,108 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="flex h-screen">
-        {/* Sidebar */}
-        <ChatSidebar
-          conversations={conversations}
-          selectedConversation={selectedConversation}
-          onSelectConversation={handleSelectConversation}
-          onNewChat={() => setShowUserSearch(true)}
-          loading={loading}
-        />
-
-        {/* Main Chat Area */}
-        <ChatMain
-          conversation={selectedConversation}
-          messages={messages}
-          currentUserWallet={address}
-          onSendMessage={(messageData) => {
-            if (!selectedConversation || !address) return;
+      {!isConnected ? (
+        // Login UI
+        <div className="flex items-center justify-center min-h-screen p-4">
+          <div className="bg-black border border-white/10 rounded-2xl w-full max-w-md p-8 text-center mb-8">
+            {/* Icon */}
+            <div className="w-20 h-20 bg-[#ffea00] rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <MessageCircle className="w-10 h-10 text-black" />
+            </div>
             
-            const socket = getSocket();
-            socket.emit('send_message', {
-              conversationId: selectedConversation._id,
-              sender: address,
-              ...messageData
-            });
-          }}
-        />
-
-        {/* User Search Modal */}
-        {showUserSearch && (
-          <UserSearchModal
-            following={following}
-            onClose={() => setShowUserSearch(false)}
-            onCreateConversation={handleCreateConversation}
+            {/* Title */}
+            <h1 className="text-2xl font-bold text-white mb-3">Connect to Chat</h1>
+            <p className="text-white/70 mb-8">
+              Connect your wallet to start chatting with other users and join conversations
+            </p>
+            
+            {/* Features */}
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4 text-[#ffea00]" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Private Messages</p>
+                  <p className="text-white/60 text-sm">Send direct messages to other users</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 text-[#ffea00]" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Group Chats</p>
+                  <p className="text-white/60 text-sm">Create and join group conversations</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center">
+                  <Wallet className="w-4 h-4 text-[#ffea00]" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Secure & Private</p>
+                  <p className="text-white/60 text-sm">Your wallet ensures secure communication</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Connect Button */}
+            <button
+              onClick={openConnectModal}
+              className="w-full bg-[#ffea00] text-black px-6 py-4 rounded-xl font-bold hover:bg-[#ffea00]/90 transition-all duration-200 shadow-lg hover:shadow-[#ffea00]/25 flex items-center justify-center gap-2 text-lg"
+            >
+              <Wallet className="w-5 h-5" />
+              Connect Wallet
+            </button>
+            
+            {/* Footer */}
+            <p className="text-white/50 text-sm mt-6">
+              By connecting, you agree to our Terms of Service
+            </p>
+          </div>
+        </div>
+      ) : (
+        // Main Chat Interface
+        <div className="flex h-screen flex-col lg:flex-row">
+          {/* Sidebar */}
+          <ChatSidebar
+            conversations={conversations}
+            selectedConversation={selectedConversation}
+            onSelectConversation={handleSelectConversation}
+            onNewChat={() => setShowUserSearch(true)}
+            loading={loading}
           />
-        )}
-      </div>
+
+          {/* Main Chat Area */}
+          <ChatMain
+            conversation={selectedConversation}
+            messages={messages}
+            currentUserWallet={address}
+            onSendMessage={(messageData) => {
+              if (!selectedConversation || !address) return;
+              
+              const socket = getSocket();
+              socket.emit('send_message', {
+                conversationId: selectedConversation._id,
+                sender: address,
+                ...messageData
+              });
+            }}
+          />
+
+          {/* User Search Modal */}
+          {showUserSearch && (
+            <UserSearchModal
+              following={following}
+              onClose={() => setShowUserSearch(false)}
+              onCreateConversation={handleCreateConversation}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

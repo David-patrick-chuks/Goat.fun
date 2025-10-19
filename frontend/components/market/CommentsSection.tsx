@@ -2,12 +2,14 @@
 
 import { getSocket } from "@/lib/socket";
 import type { Ack } from "@/lib/types";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 interface Comment {
   _id: string;
   marketId: string;
   wallet: string;
+  username?: string;
   message?: string;
   imageUrl?: string;
   replyTo?: string;
@@ -29,8 +31,17 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [hasMore, setHasMore] = React.useState(true);
   const [page, setPage] = React.useState(0);
+  const [replyingTo, setReplyingTo] = React.useState<string | null>(null);
+  const [showReplies, setShowReplies] = React.useState<Set<string>>(new Set());
 
   const commentsContainerRef = React.useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const handleUserClick = (wallet: string, username?: string) => {
+    // Navigate to profile page using username if available, otherwise wallet
+    const profilePath = username ? `/u/${username}` : `/profile/${wallet}`;
+    router.push(profilePath);
+  };
 
   // Load comments
   const loadComments = React.useCallback((pageNum = 0, append = false) => {
@@ -78,8 +89,17 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
       }
     });
 
+    socket.on("comment_liked", (data: { commentId: string; wallet: string; isLiked: boolean; likesCount: number }) => {
+      setComments(prev => prev.map(comment => 
+        comment._id === data.commentId 
+          ? { ...comment, likes: data.isLiked ? [...comment.likes, data.wallet] : comment.likes.filter(w => w !== data.wallet) }
+          : comment
+      ));
+    });
+
     return () => {
       socket.off("comment_added");
+      socket.off("comment_liked");
     };
   }, [marketId]);
 
@@ -107,6 +127,31 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
     setImagePreview(null);
   };
 
+  // Like/unlike comment
+  const likeComment = (commentId: string) => {
+    if (!address) return;
+    
+    const socket = getSocket();
+    socket.emit('like_comment', { commentId, wallet: address }, (res: Ack) => {
+      if (!res?.ok) {
+        console.error('Failed to like comment:', res?.error);
+      }
+    });
+  };
+
+  // Toggle replies visibility
+  const toggleReplies = (commentId: string) => {
+    setShowReplies(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(commentId)) {
+        newSet.delete(commentId);
+      } else {
+        newSet.add(commentId);
+      }
+      return newSet;
+    });
+  };
+
   // Submit comment
   const submitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,12 +177,14 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
             wallet: address,
             message: message.trim() || undefined,
             imageData,
-            filename
+            filename,
+            replyTo: replyingTo || undefined
           }, (res: Ack) => {
             setIsSubmitting(false);
             if (res?.ok) {
               setMessage("");
               removeImage();
+              setReplyingTo(null);
               // Add comment immediately to UI for better UX
               const tempComment: Comment = {
                 _id: `temp-${Date.now()}`,
@@ -145,6 +192,8 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
                 wallet: address,
                 message: message.trim() || undefined,
                 imageUrl: imagePreview || undefined,
+                replyTo: replyingTo || undefined,
+                likes: [],
                 createdAt: new Date().toISOString()
               };
               setComments(prev => [tempComment, ...prev]);
@@ -159,17 +208,21 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
         socket.emit('add_comment', {
           marketId,
           wallet: address,
-          message: message.trim()
+          message: message.trim() || undefined,
+          replyTo: replyingTo || undefined
         }, (res: Ack) => {
           setIsSubmitting(false);
           if (res?.ok) {
             setMessage("");
+            setReplyingTo(null);
             // Add comment immediately to UI for better UX
             const tempComment: Comment = {
               _id: `temp-${Date.now()}`,
               marketId: marketId,
               wallet: address,
-              message: message.trim(),
+              message: message.trim() || undefined,
+              replyTo: replyingTo || undefined,
+              likes: [],
               createdAt: new Date().toISOString()
             };
             setComments(prev => [tempComment, ...prev]);
@@ -288,37 +341,166 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
         ) : comments.length === 0 ? (
           <div className="text-white/50 text-sm text-center py-4">No comments yet. Be the first to comment!</div>
         ) : (
-          comments.map((comment) => (
-            <div key={comment._id} className="border-b border-white/10 pb-3 last:border-b-0">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white text-sm">
-                  {comment.wallet.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-white/80 text-sm font-medium">
-                      {comment.wallet.slice(0, 6)}...{comment.wallet.slice(-4)}
-                    </span>
-                    <span className="text-white/40 text-xs">
-                      {formatTime(comment.createdAt)}
-                    </span>
+          comments.map((comment) => {
+            const replies = comments.filter(c => c.replyTo === comment._id);
+            const isLiked = address ? comment.likes.includes(address) : false;
+            
+            return (
+              <div key={comment._id} className="border-b border-white/10 pb-3 last:border-b-0">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white text-sm">
+                    {(comment.username || comment.wallet).slice(0, 2).toUpperCase()}
                   </div>
-                  
-                  {comment.message && (
-                    <p className="text-white/90 text-sm mb-2">{comment.message}</p>
-                  )}
-                  
-                  {comment.imageUrl && (
-                    <img 
-                      src={comment.imageUrl} 
-                      alt="Comment" 
-                      className="max-w-full max-h-48 rounded-lg object-contain"
-                    />
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <button
+                        onClick={() => handleUserClick(comment.wallet, comment.username)}
+                        className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors cursor-pointer"
+                      >
+                        {comment.username || `${comment.wallet.slice(0, 6)}...${comment.wallet.slice(-4)}`}
+                      </button>
+                      <span className="text-white/40 text-xs">
+                        {formatTime(comment.createdAt)}
+                      </span>
+                    </div>
+                    
+                    {comment.message && (
+                      <p className="text-white/90 text-sm mb-2">{comment.message}</p>
+                    )}
+                    
+                    {comment.imageUrl && (
+                      <img 
+                        src={comment.imageUrl} 
+                        alt="Comment" 
+                        className="max-w-full max-h-48 rounded-lg object-contain mb-2"
+                      />
+                    )}
+
+                    {/* Comment Actions */}
+                    <div className="flex items-center gap-4 text-xs">
+                      <button
+                        onClick={() => likeComment(comment._id)}
+                        disabled={!address}
+                        className={`flex items-center gap-1 hover:text-white/80 ${
+                          isLiked ? 'text-red-400' : 'text-white/60'
+                        }`}
+                      >
+                        <span>❤️</span>
+                        <span>{comment.likes.length}</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => setReplyingTo(replyingTo === comment._id ? null : comment._id)}
+                        disabled={!address}
+                        className="text-white/60 hover:text-white/80"
+                      >
+                        Reply
+                      </button>
+                      
+                      {replies.length > 0 && (
+                        <button
+                          onClick={() => toggleReplies(comment._id)}
+                          className="text-white/60 hover:text-white/80"
+                        >
+                          {showReplies.has(comment._id) ? 'Hide replies' : `Show ${replies.length} replies`}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Reply Form */}
+                    {replyingTo === comment._id && (
+                      <div className="mt-3 ml-4 border-l-2 border-white/20 pl-3">
+                        <form onSubmit={submitComment} className="space-y-2">
+                          <textarea
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            placeholder={`Reply to ${comment.username || `${comment.wallet.slice(0, 6)}...`}`}
+                            disabled={!address || isSubmitting}
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none h-16"
+                            maxLength={1000}
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setReplyingTo(null)}
+                              className="px-3 py-1 bg-white/10 text-white text-sm rounded hover:bg-white/20"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={!address || isSubmitting || !message.trim()}
+                              className={`px-3 py-1 text-sm rounded ${
+                                address && !isSubmitting && message.trim()
+                                  ? 'bg-[#ffea00] text-black hover:bg-[#ffd700]'
+                                  : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                              }`}
+                            >
+                              {isSubmitting ? 'Posting...' : 'Reply'}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+
+                    {/* Replies */}
+                    {showReplies.has(comment._id) && replies.length > 0 && (
+                      <div className="mt-3 ml-4 border-l-2 border-white/20 pl-3 space-y-3">
+                        {replies.map((reply) => {
+                          const isReplyLiked = address ? reply.likes.includes(address) : false;
+                          return (
+                            <div key={reply._id} className="flex items-start gap-3">
+                              <div className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center text-white text-xs">
+                                {(reply.username || reply.wallet).slice(0, 2).toUpperCase()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <button
+                                    onClick={() => handleUserClick(reply.wallet, reply.username)}
+                                    className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors cursor-pointer"
+                                  >
+                                    {reply.username || `${reply.wallet.slice(0, 6)}...${reply.wallet.slice(-4)}`}
+                                  </button>
+                                  <span className="text-white/40 text-xs">
+                                    {formatTime(reply.createdAt)}
+                                  </span>
+                                </div>
+                                
+                                {reply.message && (
+                                  <p className="text-white/90 text-xs mb-1">{reply.message}</p>
+                                )}
+                                
+                                {reply.imageUrl && (
+                                  <img 
+                                    src={reply.imageUrl} 
+                                    alt="Reply" 
+                                    className="max-w-full max-h-32 rounded-lg object-contain mb-1"
+                                  />
+                                )}
+
+                                <div className="flex items-center gap-3 text-xs">
+                                  <button
+                                    onClick={() => likeComment(reply._id)}
+                                    disabled={!address}
+                                    className={`flex items-center gap-1 hover:text-white/80 ${
+                                      isReplyLiked ? 'text-red-400' : 'text-white/60'
+                                    }`}
+                                  >
+                                    <span>❤️</span>
+                                    <span>{reply.likes.length}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
 
         {/* Load More Button */}

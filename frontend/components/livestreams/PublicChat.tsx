@@ -2,15 +2,18 @@
 
 import { getSocket } from "@/lib/socket";
 import type { Ack } from "@/lib/types";
+import { MessageCircle, Send, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 interface PublicChatProps {
-  chat: { wallet: string; message: string; at: string }[];
+  chat: { wallet: string; message: string; at: string; username?: string }[];
   input: string;
   setInput: (input: string) => void;
   marketId: string | null;
   address: string | undefined;
   market: { livestream?: { isLive?: boolean } } | null;
+  viewerCount?: number;
 }
 
 export default function PublicChat({
@@ -19,9 +22,11 @@ export default function PublicChat({
   setInput,
   marketId,
   address,
-  market
+  market,
+  viewerCount = 0
 }: PublicChatProps) {
   const chatContainerRef = React.useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // Auto-scroll chat to bottom when new messages arrive
   React.useEffect(() => {
@@ -42,56 +47,100 @@ export default function PublicChat({
     });
   };
 
+  const handleUserClick = (wallet: string, username?: string) => {
+    // Navigate to profile page using username if available, otherwise wallet
+    const profilePath = username ? `/u/${username}` : `/profile/${wallet}`;
+    router.push(profilePath);
+  };
+
   return (
-    <div className="bg-black border border-white/10 rounded-lg p-4 flex flex-col">
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-white font-semibold flex items-center gap-2">
-          Public Chat
-          {market?.livestream?.isLive && (
-            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-              LIVE
-            </span>
-          )}
+    <div className="bg-gray-900 rounded-xl overflow-hidden">
+      {/* Chat Header */}
+      <div className="p-4 border-b border-gray-800">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="w-5 h-5 text-blue-400" />
+            <h3 className="text-lg font-semibold">Live Chat</h3>
+            {market?.livestream?.isLive && (
+              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                LIVE
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1 text-sm text-gray-400">
+            <Users className="w-4 h-4" />
+            <span>{viewerCount > 0 ? `${viewerCount}` : '0'}</span>
+          </div>
         </div>
-        <div className="text-xs text-white/60">323 members</div>
       </div>
       
+      {/* Chat Messages */}
       <div 
         ref={chatContainerRef}
-        className="flex-1 max-h-32 overflow-y-auto space-y-2 mb-3"
+        className="h-64 overflow-y-auto p-4 space-y-3"
       >
         {chat.length === 0 ? (
-          <div className="text-white/50 text-sm text-center py-4">
-            {market?.livestream?.isLive ? "Be the first to chat!" : "Chat will be available when stream starts"}
+          <div className="text-center text-gray-500 py-8">
+            <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+            <p className="text-sm">No messages yet</p>
+            <p className="text-xs text-gray-400">Be the first to chat!</p>
           </div>
         ) : (
           chat.map((m, i) => (
-            <div key={i} className="text-white/80 text-sm">
-              <span className="text-white/50">{m.wallet.slice(0,6)}..: </span>{m.message}
+            <div key={i} className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                {(m.username || m.wallet).slice(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <button
+                    onClick={() => handleUserClick(m.wallet, m.username)}
+                    className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
+                  >
+                    {m.username || `${m.wallet.slice(0,6)}...${m.wallet.slice(-4)}`}
+                  </button>
+                  <span className="text-xs text-gray-400">
+                    {new Date(m.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-300 break-words">{m.message}</p>
+              </div>
             </div>
           ))
         )}
       </div>
       
-      <div className="flex gap-2">
-        <button className="px-3 py-1 bg-white/5 text-white/60 text-xs rounded hover:text-white">
-          Join chat
-        </button>
-        <form onSubmit={sendMessage} className="flex-1 flex gap-2">
-          <input 
-            value={input} 
-            onChange={(e) => setInput(e.target.value)} 
-            className="flex-1 bg-white/5 border border-white/10 rounded px-3 py-2 text-white text-sm" 
-            placeholder={address ? "Say something" : "Connect wallet to chat"} 
-            disabled={!address}
-          />
+      {/* Chat Input */}
+      <div className="p-4 border-t border-gray-800">
+        <form onSubmit={sendMessage} className="flex gap-2">
+          <div className="flex-1 relative">
+            <input 
+              value={input} 
+              onChange={(e) => setInput(e.target.value)} 
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none" 
+              placeholder={address ? "Type a message..." : "Connect wallet to chat"} 
+              disabled={!address || !market?.livestream?.isLive}
+            />
+          </div>
           <button 
-            className={`px-3 py-2 rounded text-sm ${address ? 'bg-[#ffea00] text-black' : 'bg-gray-500 text-gray-300 cursor-not-allowed'}`}
-            disabled={!address}
+            type="submit"
+            className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              address && market?.livestream?.isLive && input.trim()
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+            }`}
+            disabled={!address || !market?.livestream?.isLive || !input.trim()}
           >
-            Send
+            <Send className="w-4 h-4" />
           </button>
         </form>
+        
+        {!address && (
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            Connect your wallet to participate in the chat
+          </p>
+        )}
       </div>
     </div>
   );

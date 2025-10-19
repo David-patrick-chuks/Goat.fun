@@ -43,17 +43,25 @@ export function registerUserHandlers(_io: Server<ClientEvents, ServerEvents>, so
   socket.on(
     "get_user",
     async (
-      { wallet }: { wallet: string },
+      { identifier }: { identifier: string },
       ack?: (result: AckResult) => void
     ) => {
       try {
-        const user = await User.findOne({ wallet }).lean();
-        if (!user) throw new Error("User not found");
+        // Try to find user by wallet first, then by username
+        let user = await User.findOne({ wallet: identifier }).lean();
+        if (!user) {
+          user = await User.findOne({ username: identifier }).lean();
+        }
+        
+        if (!user) {
+          throw new Error("User not found");
+        }
+        
         ack?.({ ok: true, data: user });
-        console.log(`[socket] get_user success for wallet: ${wallet}`);
+        console.log(`[socket] get_user success for identifier: ${identifier}`);
       } catch (err) {
         const e = err as Error;
-        console.error(`[socket] get_user error for wallet: ${wallet}`, e.message);
+        console.error(`[socket] get_user error for identifier: ${identifier}`, e.message);
         ack?.({ ok: false, error: e.message });
       }
     }
