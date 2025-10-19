@@ -54,7 +54,7 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, className = '' }) => {
   };
 
   return (
-    <Link href={`/livestreams?marketId=${market.id}`} className={`
+    <Link href={`/market/${market.id}`} className={`
       bg-black rounded-lg border border-white/10
       hover:border-white/30 transition-colors cursor-pointer
       ${className}

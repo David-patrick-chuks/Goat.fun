@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
-import { useAccount } from "wagmi";
-import MarketHeader from "./MarketHeader";
-import MarketTrading from "./MarketTrading";
-import MarketLivestream from "./MarketLivestream";
-import MarketComments from "./MarketComments";
-import MarketHolders from "./MarketHolders";
 import { useMarketData } from "@/hooks/useMarketData";
+import { useAccount } from "wagmi";
+import CommentsSection from "./CommentsSection";
+import MarketHeader from "./MarketHeader";
+import MarketHolders from "./MarketHolders";
+import MarketLivestream from "./MarketLivestream";
+import MarketTrading from "./MarketTrading";
 
 interface MarketPageProps {
   marketId: string;
@@ -59,7 +58,14 @@ export default function MarketPage({ marketId }: MarketPageProps) {
           {/* Right Column - Comments & Holders */}
           <div className="space-y-6">
             {/* Comments Section */}
-            <MarketComments marketId={marketId} address={address} />
+            <div className="bg-gray-900 rounded-xl">
+              <div className="p-4 border-b border-gray-800">
+                <h3 className="text-lg font-semibold">Comments</h3>
+              </div>
+              <div className="p-4">
+                <CommentsSection marketId={marketId} address={address} />
+              </div>
+            </div>
             
             {/* Holders Section */}
             <MarketHolders holders={holders} />
