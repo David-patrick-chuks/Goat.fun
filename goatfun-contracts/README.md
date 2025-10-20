@@ -16,6 +16,94 @@ GoatFun implements a prediction market system where each market has two sides (B
 - **Oracle Integration**: Support for decentralized oracle resolution
 - **Security Features**: Reentrancy guards, access controls, and pausable functionality
 
+## How the Dual-Token System Works
+
+### Overview
+
+Each prediction market creates **TWO separate tokens** that users can buy and sell:
+
+1. **Bullish Token** - For users who believe the prediction will be TRUE
+2. **Fade Token** - For users who believe the prediction will be FALSE
+
+### Example: "Bitcoin will reach $100k by end of 2024"
+
+When this market is created, it launches:
+- **BTCWIN-Bullish** token (for believers)
+- **BTCWIN-Fade** token (for doubters)
+
+### User Experience
+
+**Buying Shares:**
+```solidity
+// User thinks Bitcoin WILL reach $100k
+market.buy(Side.Bullish, 100 tokens); // Gets Bullish shares
+
+// User thinks Bitcoin WON'T reach $100k  
+market.buy(Side.Fade, 100 tokens); // Gets Fade shares
+```
+
+**Price Dynamics:**
+- **More people buy Bullish** → Bullish token price goes UP
+- **More people buy Fade** → Fade token price goes UP
+- **People sell Bullish** → Bullish token price goes DOWN
+- **People sell Fade** → Fade token price goes DOWN
+
+### Bonding Curve Pricing
+
+Each side has its own independent bonding curve:
+
+```solidity
+Bullish Price = basePrice + increment × (number of bullish shares sold)
+Fade Price = basePrice + increment × (number of fade shares sold)
+```
+
+**Example:**
+- Base price: 1 token per share
+- Increment: 0.001 tokens per share
+- If 1000 Bullish shares sold → Bullish price = 1 + (0.001 × 1000) = 2 tokens per share
+- If 500 Fade shares sold → Fade price = 1 + (0.001 × 500) = 1.5 tokens per share
+
+### Market Resolution & Payouts
+
+**When the market resolves:**
+
+1. **Oracle determines winner** (e.g., Bitcoin DID reach $100k)
+2. **Bullish holders WIN** → They get payout from the pot
+3. **Fade holders LOSE** → Their tokens become worthless
+
+**Payout Example:**
+- Total pot: 10,000 tokens
+- Bullish holders own 60% of total shares
+- Each Bullish share gets: (10,000 × 0.6) ÷ total_bullish_shares
+
+### Revenue Distribution
+
+**Every buy transaction splits the money:**
+- 60% → Pot (for winners)
+- 30% → Dividends to existing holders
+- 10% → Reserve (for sells)
+- 0-2% → Creator fee
+
+### Real Example Flow
+
+1. **Market Created**: "Ethereum will outperform Bitcoin this month"
+2. **User A buys 100 Bullish shares** for 150 tokens
+3. **User B buys 50 Fade shares** for 75 tokens  
+4. **User C buys 200 Bullish shares** for 400 tokens
+5. **Market resolves**: Ethereum DID outperform Bitcoin
+6. **Winners (Bullish holders)** claim payout from pot
+7. **Losers (Fade holders)** get nothing
+
+### Key Benefits
+
+✅ **Two-sided betting** - Users can bet FOR or AGAINST
+✅ **Independent pricing** - Each side has its own supply/demand
+✅ **Real-time value** - Token prices reflect market sentiment
+✅ **Liquidity** - Users can sell anytime before resolution
+✅ **Dividends** - Holders earn from new buyers
+
+This creates a dynamic prediction market where the token prices reflect the collective wisdom of the crowd!
+
 ## Contract Architecture
 
 ### Core Contracts
