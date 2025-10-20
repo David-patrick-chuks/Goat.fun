@@ -2,9 +2,9 @@
 
 import { getSocket } from "@/lib/socket";
 import type { Ack } from "@/lib/types";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import React from "react";
 import { useAccount } from "wagmi";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 import EditProfileModal from "./EditProfileModal";
 
 interface Market {
@@ -55,8 +55,8 @@ interface Comment {
   _id: string;
   marketId: string;
   marketTitle: string;
-  user: User;
-  content: string;
+  message?: string;
+  imageUrl?: string;
   createdAt: string;
 }
 
@@ -179,7 +179,8 @@ export default function ProfileContent() {
   React.useEffect(() => {
     if (!isConnected || !address) return;
     const socket = getSocket();
-    socket.emit('get_user', { wallet: address }, (res: Ack<{
+    // Server expects { identifier } which can be wallet or username
+    socket.emit('get_user', { identifier: address }, (res: Ack<{
       username?: string;
       bio?: string;
       avatarUrl?: string;
@@ -197,77 +198,65 @@ export default function ProfileContent() {
     });
   }, [isConnected, address]);
 
-  // Load balance data
+  // Load balance data from server
   React.useEffect(() => {
     if (!isConnected || !address || activeTab !== "balance") return;
     setIsLoadingBalance(true);
     const socket = getSocket();
-    
-    socket.emit('get_user_tokens', { 
+    socket.emit('get_user_tokens', {
       wallet: address,
       page: balancePage,
-      limit: 20 
+      limit: 20
     }, (res: Ack<{ tokens: Token[] }>) => {
       setIsLoadingBalance(false);
       if (res?.ok && res.data) {
         setWalletTokens(res.data.tokens);
+      } else {
+        setWalletTokens([]);
       }
     });
   }, [isConnected, address, activeTab, balancePage]);
 
-  // Load markets data
+  // Load markets data using supported endpoint
   React.useEffect(() => {
     if (!isConnected || !address || activeTab !== "markets") return;
     setIsLoadingMarkets(true);
     const socket = getSocket();
     
-    socket.emit('get_user_markets', { 
-      wallet: address,
-      page: marketsPage,
-      limit: 20 
-    }, (res: Ack<{ markets: Market[], revenue: number }>) => {
+    socket.emit('get_markets', { status: 'active', page: marketsPage, limit: 20, sort: 'newest', search: address }, (res: Ack<{ items: Market[]; total: number }>) => {
       setIsLoadingMarkets(false);
       if (res?.ok && res.data) {
-        setCreatedMarkets(res.data.markets);
-        setCreatorRevenue(res.data.revenue);
+        const items = res.data.items || [];
+        setCreatedMarkets(items.filter(m => m.creator === address));
+        setCreatorRevenue(0);
       }
     });
   }, [isConnected, address, activeTab, marketsPage]);
 
-  // Load comments data
+  // Load user's comments across markets
   React.useEffect(() => {
     if (!isConnected || !address || activeTab !== "comments") return;
     setIsLoadingComments(true);
     const socket = getSocket();
-    
-    socket.emit('get_user_comments', { 
+    socket.emit('get_user_comments', {
       wallet: address,
       page: commentsPage,
-      limit: 20 
+      limit: 20
     }, (res: Ack<{ comments: Comment[] }>) => {
       setIsLoadingComments(false);
       if (res?.ok && res.data) {
         setComments(res.data.comments);
+      } else {
+        setComments([]);
       }
     });
   }, [isConnected, address, activeTab, commentsPage]);
 
-  // Load notifications data
+  // Load notifications data (not available) -> safe empty state
   React.useEffect(() => {
     if (!isConnected || !address || activeTab !== "notification") return;
-    setIsLoadingNotifications(true);
-    const socket = getSocket();
-    
-    socket.emit('get_user_notifications', { 
-      wallet: address,
-      page: notificationsPage,
-      limit: 20 
-    }, (res: Ack<{ notifications: Notification[] }>) => {
-      setIsLoadingNotifications(false);
-      if (res?.ok && res.data) {
-        setNotifications(res.data.notifications);
-      }
-    });
+    setIsLoadingNotifications(false);
+    setNotifications([]);
   }, [isConnected, address, activeTab, notificationsPage]);
 
   // Load followers data
@@ -276,14 +265,12 @@ export default function ProfileContent() {
     setIsLoadingFollowers(true);
     const socket = getSocket();
     
-    socket.emit('get_user_followers', { 
-      wallet: address,
-      page: followersPage,
-      limit: 20 
-    }, (res: Ack<{ followers: User[] }>) => {
+    socket.emit('get_followers', { 
+      wallet: address
+    }, (res: Ack<any[]>) => {
       setIsLoadingFollowers(false);
-      if (res?.ok && res.data) {
-        setFollowersList(res.data.followers);
+      if (res?.ok && Array.isArray(res.data)) {
+        setFollowersList(res.data.map((r: any) => r.follower));
       }
     });
   }, [isConnected, address, activeTab, followersPage]);
@@ -294,14 +281,12 @@ export default function ProfileContent() {
     setIsLoadingFollowers(true);
     const socket = getSocket();
     
-    socket.emit('get_user_following', { 
-      wallet: address,
-      page: followingPage,
-      limit: 20 
-    }, (res: Ack<{ following: User[] }>) => {
+    socket.emit('get_following', { 
+      wallet: address
+    }, (res: Ack<any[]>) => {
       setIsLoadingFollowers(false);
-      if (res?.ok && res.data) {
-        setFollowingList(res.data.following);
+      if (res?.ok && Array.isArray(res.data)) {
+        setFollowingList(res.data.map((r: any) => r.following));
       }
     });
   }, [isConnected, address, activeTab, followingPage]);
@@ -312,7 +297,7 @@ export default function ProfileContent() {
     
     socket.emit('follow_user', { 
       follower: address,
-      target: targetWallet 
+      following: targetWallet 
     }, (res: Ack) => {
       if (res?.ok) {
         // Refresh followers/following data
@@ -331,7 +316,7 @@ export default function ProfileContent() {
     
     socket.emit('unfollow_user', { 
       follower: address,
-      target: targetWallet 
+      following: targetWallet 
     }, (res: Ack) => {
       if (res?.ok) {
         // Refresh followers/following data
@@ -532,17 +517,17 @@ export default function ProfileContent() {
             {comments.map((comment) => (
               <div key={comment._id} className="bg-white/5 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                    <img src={comment.user.avatarUrl || "/goatfun.png"} alt="avatar" className="w-full h-full object-cover rounded-full" />
-                  </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-white font-medium">{comment.user.username}</span>
-                      <span className="text-white/50 text-sm">on</span>
-                      <span className="text-[#ffea00] text-sm">{comment.marketTitle}</span>
+                      <a href={`/market/${comment.marketId}`} className="text-[#ffea00] hover:underline text-sm">{comment.marketTitle}</a>
                       <span className="text-white/50 text-sm">{formatDate(comment.createdAt)}</span>
                     </div>
-                    <p className="text-white/80">{comment.content}</p>
+                    {comment.message && (
+                      <p className="text-white/80 mb-2">{comment.message}</p>
+                    )}
+                    {comment.imageUrl && (
+                      <img src={comment.imageUrl} alt="comment media" className="rounded-lg max-h-64 object-cover" />
+                    )}
                   </div>
                 </div>
               </div>

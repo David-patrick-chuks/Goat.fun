@@ -12,14 +12,6 @@ import "../src/SimpleOracle.sol";
  * @dev Deploys MarketFactory and SimpleOracle contracts
  */
 contract DeployGoatFun is Script {
-    /// @notice Default split configuration (60% pot, 30% holders, 10% reserve)
-    IMarketPair.SplitConfig constant DEFAULT_SPLIT = IMarketPair.SplitConfig({
-        potShare: 6000,           // 60%
-        holderDividendShare: 3000, // 30%
-        reserveShare: 1000,        // 10%
-        creatorFeeShare: 0         // 0% (can be set per market)
-    });
-
     /// @notice Default creator fee (2%)
     uint256 constant DEFAULT_CREATOR_FEE = 200; // 2%
 
@@ -38,12 +30,17 @@ contract DeployGoatFun is Script {
         SimpleOracle oracle = new SimpleOracle();
         console.log("SimpleOracle deployed at:", address(oracle));
 
+        // Build default split in memory (60/30/10)
+        IMarketPair.SplitConfig memory defaultSplit = IMarketPair.SplitConfig({
+            potShare: 6000,
+            holderDividendShare: 3000,
+            reserveShare: 1000,
+            creatorFeeShare: 0
+        });
+
         // Deploy MarketFactory
         console.log("\n=== Deploying MarketFactory ===");
-        MarketFactory factory = new MarketFactory(
-            DEFAULT_CREATOR_FEE,
-            DEFAULT_SPLIT
-        );
+        MarketFactory factory = new MarketFactory(DEFAULT_CREATOR_FEE, defaultSplit);
         console.log("MarketFactory deployed at:", address(factory));
 
         vm.stopBroadcast();
@@ -54,10 +51,10 @@ contract DeployGoatFun is Script {
         console.log("MarketFactory:", address(factory));
         console.log("Default Creator Fee:", DEFAULT_CREATOR_FEE, "basis points (2%)");
         console.log("Default Split Config:");
-        console.log("  Pot Share:", DEFAULT_SPLIT.potShare, "basis points (60%)");
-        console.log("  Holder Dividend Share:", DEFAULT_SPLIT.holderDividendShare, "basis points (30%)");
-        console.log("  Reserve Share:", DEFAULT_SPLIT.reserveShare, "basis points (10%)");
-        console.log("  Creator Fee Share:", DEFAULT_SPLIT.creatorFeeShare, "basis points (0%)");
+        console.log("  Pot Share:", defaultSplit.potShare, "basis points (60%)");
+        console.log("  Holder Dividend Share:", defaultSplit.holderDividendShare, "basis points (30%)");
+        console.log("  Reserve Share:", defaultSplit.reserveShare, "basis points (10%)");
+        console.log("  Creator Fee Share:", defaultSplit.creatorFeeShare, "basis points (0%)");
 
         // Verify contracts
         console.log("\n=== Verification ===");

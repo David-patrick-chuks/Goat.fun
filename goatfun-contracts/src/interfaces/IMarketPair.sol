@@ -34,6 +34,7 @@ interface IMarketPair {
         uint256 startTime;
         uint256 endTime;
         uint256 durationHours;
+        uint256 creatorFeePercent; // basis points
         bool resolved;
         IMarketOracle.MarketResult result;
         PayoutMode payoutMode;
@@ -76,6 +77,11 @@ interface IMarketPair {
      * @return revenueAmount Amount of tokens withdrawn
      */
     function withdrawCreatorRevenue() external returns (uint256 revenueAmount);
+
+    /**
+     * @notice Resolve the market with a result (oracle/owner only)
+     */
+    function resolve(IMarketOracle.MarketResult result) external;
 
     /**
      * @notice Get current price for buying one share on a side

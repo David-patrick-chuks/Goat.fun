@@ -4,12 +4,12 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "../interfaces/IMarketPair.sol";
-import "../interfaces/IMarketOracle.sol";
-import "../utils/PriceMath.sol";
+import "src/interfaces/IMarketPair.sol";
+import "src/interfaces/IMarketOracle.sol";
+import "src/utils/PriceMath.sol";
 
 /**
  * @title MarketPair
@@ -138,7 +138,7 @@ contract MarketPair is IMarketPair, Ownable, ReentrancyGuard, Pausable {
         address _creatorAddress,
         uint256 _creatorFeePercent,
         SplitConfig memory _splitConfig
-    ) {
+    ) Ownable(_creatorAddress) {
         require(bytes(_title).length > 0, "Title required");
         require(bytes(_ticker).length > 0, "Ticker required");
         require(_durationHours > 0, "Duration must be positive");
@@ -165,30 +165,17 @@ contract MarketPair is IMarketPair, Ownable, ReentrancyGuard, Pausable {
             endTime: block.timestamp + (_durationHours * 1 hours),
             durationHours: _durationHours,
             resolved: false,
+            creatorFeePercent: _creatorFeePercent,
             result: IMarketOracle.MarketResult.None,
             payoutMode: PayoutMode.ProRata, // Default to safe pro-rata mode
             splitConfig: _splitConfig
         });
 
-        // Initialize sides
-        sides[Side.Bullish] = SideData({
-            netShares: 0,
-            totalSupply: 0,
-            basePrice: _basePriceBullish,
-            increment: _incrementBullish,
-            cumulativeDividendPerShare: 0
-        });
-
-        sides[Side.Fade] = SideData({
-            netShares: 0,
-            totalSupply: 0,
-            basePrice: _basePriceFade,
-            increment: _incrementFade,
-            cumulativeDividendPerShare: 0
-        });
-
-        // Transfer ownership to creator
-        _transferOwnership(_creatorAddress);
+        // Initialize side params (mappings remain default)
+        sides[Side.Bullish].basePrice = _basePriceBullish;
+        sides[Side.Bullish].increment = _incrementBullish;
+        sides[Side.Fade].basePrice = _basePriceFade;
+        sides[Side.Fade].increment = _incrementFade;
 
         emit MarketCreated(
             address(this),
@@ -408,7 +395,7 @@ contract MarketPair is IMarketPair, Ownable, ReentrancyGuard, Pausable {
         returns (uint256 revenueAmount) 
     {
         require(msg.sender == marketInfo.creator, "Only creator can withdraw");
-        require(marketEnded, "Market must be ended");
+        require(marketEnded || block.timestamp >= marketInfo.endTime, "Market must be ended");
         
         revenueAmount = creatorRevenue;
         require(revenueAmount > 0, "No revenue to withdraw");
@@ -431,6 +418,9 @@ contract MarketPair is IMarketPair, Ownable, ReentrancyGuard, Pausable {
         );
         require(result != IMarketOracle.MarketResult.None, "Invalid result");
         require(!marketEnded, "Already resolved");
+        // Allow early resolution only if both sides have activity; otherwise require end time
+        bool bothSidesActive = sides[Side.Bullish].totalSupply > 0 && sides[Side.Fade].totalSupply > 0;
+        require(block.timestamp >= marketInfo.endTime || bothSidesActive, "Market not ended");
         
         marketInfo.resolved = true;
         marketInfo.result = result;
@@ -488,7 +478,7 @@ contract MarketPair is IMarketPair, Ownable, ReentrancyGuard, Pausable {
         uint256 userShares = sideData.balances[account];
         if (userShares == 0) return 0;
         
-        uint256 totalDividend = (sideData.cumulativeDividendPerShare * userShares) / PriceMath.SCALE;
+        uint256 totalDividend = (sideData.cumulativeDividendPerShare * userShares) / 1e18;
         uint256 creditedDividend = sideData.dividendCreditedTo[account];
         
         return totalDividend > creditedDividend ? totalDividend - creditedDividend : 0;
@@ -531,10 +521,11 @@ contract MarketPair is IMarketPair, Ownable, ReentrancyGuard, Pausable {
         SplitConfig memory config = marketInfo.splitConfig;
         
         // Calculate amounts for each bucket
-        uint256 potAmount = (amount * config.potShare) / 10000;
-        uint256 holderDividendAmount = (amount * config.holderDividendShare) / 10000;
-        uint256 reserveAmount = (amount * config.reserveShare) / 10000;
-        uint256 creatorFeeAmount = (amount * config.creatorFeeShare) / 10000;
+        uint256 creatorFeeAmount = (amount * marketInfo.creatorFeePercent) / 10000;
+        uint256 remaining = amount - creatorFeeAmount;
+        uint256 potAmount = (remaining * config.potShare) / 10000;
+        uint256 holderDividendAmount = (remaining * config.holderDividendShare) / 10000;
+        uint256 reserveAmount = (remaining * config.reserveShare) / 10000;
         
         // Update balances
         potBalance += potAmount;
@@ -558,7 +549,7 @@ contract MarketPair is IMarketPair, Ownable, ReentrancyGuard, Pausable {
             potBalance += dividendAmount;
         } else {
             // Add to cumulative dividend per share
-            sideData.cumulativeDividendPerShare += (dividendAmount * PriceMath.SCALE) / sideData.totalSupply;
+            sideData.cumulativeDividendPerShare += (dividendAmount * 1e18) / sideData.totalSupply;
         }
     }
 
@@ -574,7 +565,7 @@ contract MarketPair is IMarketPair, Ownable, ReentrancyGuard, Pausable {
         
         if (userShares == 0) return 0;
         
-        uint256 totalDividend = (sideData.cumulativeDividendPerShare * userShares) / PriceMath.SCALE;
+        uint256 totalDividend = (sideData.cumulativeDividendPerShare * userShares) / 1e18;
         uint256 creditedDividend = sideData.dividendCreditedTo[account];
         
         if (totalDividend > creditedDividend) {

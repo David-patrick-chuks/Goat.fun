@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
-import { Trade } from "../../models/Trade";
 import { PriceHistory } from "../../models/PriceHistory";
+import { Trade } from "../../models/Trade";
 import type { AckResult, ClientEvents, ServerEvents } from "../../types/socket";
 
 export function registerTradingHandlers(_io: Server<ClientEvents, ServerEvents>, socket: Socket<ClientEvents, ServerEvents>): void {
@@ -89,6 +89,62 @@ export function registerTradingHandlers(_io: Server<ClientEvents, ServerEvents>,
     }
   );
 
+  // Aggregate a user's token positions
+  socket.on(
+    "get_user_tokens",
+    async (
+      { wallet, page, limit }: { wallet: string; page?: number; limit?: number },
+      ack?: (result: AckResult) => void
+    ) => {
+      try {
+        const p = Math.max(1, page ?? 1);
+        const l = Math.min(50, Math.max(1, limit ?? 20));
+
+        // Sum trades per market and side to get current positions
+        const positions = await Trade.aggregate([
+          { $match: { wallet } },
+          {
+            $group: {
+              _id: { marketId: "$marketId", side: "$side" },
+              amount: { $sum: "$amount" },
+              shares: { $sum: "$shares" },
+              avgPrice: { $avg: "$price" },
+              lastTrade: { $max: "$timestamp" }
+            }
+          },
+          { $sort: { lastTrade: -1 } },
+          { $skip: (p - 1) * l },
+          { $limit: l }
+        ]);
+
+        // Join with markets for titles/tickers
+        const marketIds = Array.from(new Set(positions.map((p: any) => p._id.marketId)));
+        const MarketModel = (await import("../../models/Market")).Market;
+        const markets = await MarketModel.find({ _id: { $in: marketIds } }, { title: 1, ticker: 1 }).lean();
+        const marketMap = new Map(markets.map((m: any) => [String(m._id), m]));
+
+        const tokens = positions.map((pos: any) => {
+          const m = marketMap.get(pos._id.marketId) || {};
+          return {
+            _id: `${pos._id.marketId}-${pos._id.side}`,
+            marketId: pos._id.marketId,
+            marketTitle: m.title || "Market",
+            ticker: m.ticker || "",
+            amount: pos.shares,
+            side: pos._id.side,
+            price: pos.avgPrice,
+            value: pos.amount,
+            createdAt: pos.lastTrade
+          };
+        });
+
+        ack?.({ ok: true, data: { tokens } });
+      } catch (err) {
+        const e = err as Error;
+        ack?.({ ok: false, error: e.message });
+      }
+    }
+  );
   socket.on(
     "get_holders",
     async (

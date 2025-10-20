@@ -81,14 +81,14 @@ export default function ProfilePage() {
     });
 
     // Load followers
-    socket.emit('get_followers', { identifier }, (res: Ack<FollowRelation[]>) => {
+    socket.emit('get_followers', { wallet: identifier }, (res: Ack<FollowRelation[]>) => {
       if (res?.ok && Array.isArray(res.data)) {
         setFollowers(res.data.map(f => f.follower));
       }
     });
 
     // Load following
-    socket.emit('get_following', { identifier }, (res: Ack<FollowRelation[]>) => {
+    socket.emit('get_following', { wallet: identifier }, (res: Ack<FollowRelation[]>) => {
       if (res?.ok && Array.isArray(res.data)) {
         setFollowing(res.data.map(f => f.following));
       }

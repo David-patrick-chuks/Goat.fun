@@ -49,12 +49,7 @@ contract GoatFunTest is Test {
     uint256 constant INCREMENT = 1e15;  // 0.001 token increment
     uint256 constant CREATOR_FEE = 200; // 2%
     
-    IMarketPair.SplitConfig constant SPLIT_CONFIG = IMarketPair.SplitConfig({
-        potShare: 6000,           // 60%
-        holderDividendShare: 3000, // 30%
-        reserveShare: 1000,        // 10%
-        creatorFeeShare: 0         // 0%
-    });
+    IMarketPair.SplitConfig internal splitConfig;
 
     event MarketCreated(address indexed market, address indexed creator, bytes32 indexed marketId, string title, string ticker);
     event Buy(address indexed buyer, IMarketPair.Side indexed side, uint256 sharesBought, uint256 amountSpent, uint256 newPrice);
@@ -69,7 +64,13 @@ contract GoatFunTest is Test {
         
         // Deploy contracts
         oracle = new SimpleOracle();
-        factory = new MarketFactory(CREATOR_FEE, SPLIT_CONFIG);
+        splitConfig = IMarketPair.SplitConfig({
+            potShare: 6000,
+            holderDividendShare: 3000,
+            reserveShare: 1000,
+            creatorFeeShare: 0
+        });
+        factory = new MarketFactory(CREATOR_FEE, splitConfig);
         token = new TestToken("Test Token", "TEST");
         
         // Distribute tokens
@@ -91,7 +92,7 @@ contract GoatFunTest is Test {
             address(token),
             creator,
             CREATOR_FEE,
-            SPLIT_CONFIG
+            splitConfig
         );
         
         market = MarketPair(marketAddress);
@@ -385,15 +386,15 @@ contract GoatFunTest is Test {
         assertEq(tokenMarkets[0], address(market));
         
         // Test getting active markets
-        address[] memory activeMarkets = factory.getActiveMarkets();
-        assertEq(activeMarkets.length, 1);
-        assertEq(activeMarkets[0], address(market));
+        address[] memory activeMkts = factory.getActiveMarkets();
+        assertEq(activeMkts.length, 1);
+        assertEq(activeMkts[0], address(market));
         
         // Test market stats
-        (uint256 totalMarkets, uint256 activeMarkets, uint256 resolvedMarkets, uint256 expiredMarkets) = 
+        (uint256 totalMarkets, uint256 numActive, uint256 resolvedMarkets, uint256 expiredMarkets) = 
             factory.getMarketStats();
         assertEq(totalMarkets, 1);
-        assertEq(activeMarkets, 1);
+        assertEq(numActive, 1);
         assertEq(resolvedMarkets, 0);
         assertEq(expiredMarkets, 0);
     }

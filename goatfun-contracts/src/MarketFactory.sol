@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "../interfaces/IMarketFactory.sol";
-import "../interfaces/IMarketPair.sol";
+import "src/interfaces/IMarketFactory.sol";
+import "src/interfaces/IMarketPair.sol";
 import "./MarketPair.sol";
 
 /**
@@ -55,7 +55,7 @@ contract MarketFactory is IMarketFactory, Ownable, ReentrancyGuard, Pausable {
     constructor(
         uint256 _defaultCreatorFee,
         IMarketPair.SplitConfig memory _defaultSplitConfig
-    ) {
+    ) Ownable(msg.sender) {
         require(_defaultCreatorFee <= 10000, "Creator fee too high");
         require(
             _defaultSplitConfig.potShare + _defaultSplitConfig.holderDividendShare + 
@@ -95,7 +95,7 @@ contract MarketFactory is IMarketFactory, Ownable, ReentrancyGuard, Pausable {
         address creatorAddress,
         uint256 creatorFeePercent,
         IMarketPair.SplitConfig memory splitConfig
-    ) external override nonReentrant whenNotPaused returns (address marketAddress, bytes32 marketId) {
+    ) public override nonReentrant whenNotPaused returns (address marketAddress, bytes32 marketId) {
         // Validate inputs
         require(bytes(title).length > 0, "Title required");
         require(bytes(ticker).length > 0, "Ticker required");

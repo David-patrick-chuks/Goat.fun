@@ -7,6 +7,7 @@ import MarketHeader from "./MarketHeader";
 import MarketHolders from "./MarketHolders";
 import MarketLivestream from "./MarketLivestream";
 import MarketTrading from "./MarketTrading";
+import PriceChart from "./PriceChart";
 
 interface MarketPageProps {
   marketId: string;
@@ -37,13 +38,15 @@ export default function MarketPage({ marketId }: MarketPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Trading & Livestream */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Livestream Section */}
-            <MarketLivestream 
-              market={market} 
-              marketId={marketId} 
-              address={address} 
-              isStreamer={isStreamer} 
-            />
+            {/* Livestream Section - only show to streamer when not live, or to everyone when live */}
+            {(market.livestream?.isLive || isStreamer) && (
+              <MarketLivestream 
+                market={market} 
+                marketId={marketId} 
+                address={address} 
+                isStreamer={isStreamer} 
+              />
+            )}
             
             {/* Trading Section */}
             <MarketTrading 
@@ -52,6 +55,20 @@ export default function MarketPage({ marketId }: MarketPageProps) {
               address={address} 
               holders={holders}
               priceHistory={priceHistory}
+            />
+
+            {/* Price Chart with initial liquidity seed */}
+            <PriceChart
+              data={(priceHistory && priceHistory.length > 0)
+                ? priceHistory
+                : [{
+                    timestamp: new Date(),
+                    bullishPrice: market.bullishPrice ?? 0,
+                    fadePrice: market.fadePrice ?? 0,
+                    bullishSupply: market.bullishSupply,
+                    fadeSupply: market.fadeSupply,
+                    poolBalance: market.poolBalance,
+                  }]}
             />
           </div>
           

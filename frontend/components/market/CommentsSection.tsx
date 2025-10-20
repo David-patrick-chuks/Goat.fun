@@ -130,6 +130,7 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
   // Like/unlike comment
   const likeComment = (commentId: string) => {
     if (!address) return;
+    if (commentId.startsWith('temp-')) return; // avoid sending invalid ObjectId
     
     const socket = getSocket();
     socket.emit('like_comment', { commentId, wallet: address }, (res: Ack) => {
@@ -179,24 +180,16 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
             imageData,
             filename,
             replyTo: replyingTo || undefined
-          }, (res: Ack) => {
+          }, (res: Ack<Comment>) => {
             setIsSubmitting(false);
             if (res?.ok) {
               setMessage("");
               removeImage();
               setReplyingTo(null);
-              // Add comment immediately to UI for better UX
-              const tempComment: Comment = {
-                _id: `temp-${Date.now()}`,
-                marketId: marketId,
-                wallet: address,
-                message: message.trim() || undefined,
-                imageUrl: imagePreview || undefined,
-                replyTo: replyingTo || undefined,
-                likes: [],
-                createdAt: new Date().toISOString()
-              };
-              setComments(prev => [tempComment, ...prev]);
+              // Prefer server-created comment (has real _id)
+              if (res.data) {
+                setComments(prev => [res.data as any, ...prev]);
+              }
             } else {
               console.error('Failed to add comment:', res?.error);
               alert(`Failed to add comment: ${res?.error}`);
@@ -210,22 +203,14 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
           wallet: address,
           message: message.trim() || undefined,
           replyTo: replyingTo || undefined
-        }, (res: Ack) => {
+        }, (res: Ack<Comment>) => {
           setIsSubmitting(false);
           if (res?.ok) {
             setMessage("");
             setReplyingTo(null);
-            // Add comment immediately to UI for better UX
-            const tempComment: Comment = {
-              _id: `temp-${Date.now()}`,
-              marketId: marketId,
-              wallet: address,
-              message: message.trim() || undefined,
-              replyTo: replyingTo || undefined,
-              likes: [],
-              createdAt: new Date().toISOString()
-            };
-            setComments(prev => [tempComment, ...prev]);
+            if (res.data) {
+              setComments(prev => [res.data as any, ...prev]);
+            }
           } else {
             console.error('Failed to add comment:', res?.error);
             alert(`Failed to add comment: ${res?.error}`);
@@ -390,7 +375,10 @@ export default function CommentsSection({ marketId, address }: CommentsSectionPr
                       </button>
                       
                       <button
-                        onClick={() => setReplyingTo(replyingTo === comment._id ? null : comment._id)}
+                        onClick={() => {
+                          if (comment._id.startsWith('temp-')) return; // cannot reply to unsaved comment
+                          setReplyingTo(replyingTo === comment._id ? null : comment._id);
+                        }}
                         disabled={!address}
                         className="text-white/60 hover:text-white/80"
                       >

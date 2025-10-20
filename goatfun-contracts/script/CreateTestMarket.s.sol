@@ -22,14 +22,6 @@ contract CreateTestMarket is Script {
     uint256 constant INCREMENT_FADE = 1e15;       // 0.001 token increment
     uint256 constant CREATOR_FEE_PERCENT = 200;   // 2%
 
-    /// @notice Test split configuration
-    IMarketPair.SplitConfig constant TEST_SPLIT = IMarketPair.SplitConfig({
-        potShare: 6000,           // 60%
-        holderDividendShare: 3000, // 30%
-        reserveShare: 1000,        // 10%
-        creatorFeeShare: 0         // 0% (creator fee handled separately)
-    });
-
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
@@ -50,6 +42,14 @@ contract CreateTestMarket is Script {
 
         MarketFactory factory = MarketFactory(factoryAddress);
 
+        // Build split config in memory
+        IMarketPair.SplitConfig memory split = IMarketPair.SplitConfig({
+            potShare: 6000,
+            holderDividendShare: 3000,
+            reserveShare: 1000,
+            creatorFeeShare: 0
+        });
+
         // Create the market
         console.log("\n=== Creating Test Market ===");
         console.log("Title:", MARKET_TITLE);
@@ -68,7 +68,7 @@ contract CreateTestMarket is Script {
             tokenAddress,
             deployer, // Creator
             CREATOR_FEE_PERCENT,
-            TEST_SPLIT
+            split
         );
 
         vm.stopBroadcast();

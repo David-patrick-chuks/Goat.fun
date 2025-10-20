@@ -114,6 +114,48 @@ export function registerCommentHandlers(io: Server<ClientEvents, ServerEvents>, 
     }
   );
 
+  // Get all comments made by a user across markets
+  socket.on(
+    "get_user_comments",
+    async (
+      { wallet, page, limit }: { wallet: string; page?: number; limit?: number },
+      ack?: (result: AckResult) => void
+    ) => {
+      try {
+        const lim = Math.min(50, Math.max(1, limit ?? 20));
+        const pg = Math.max(0, page ?? 0);
+        const skip = pg * lim;
+
+        const comments = await Comment.find({ wallet })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(lim)
+          .lean();
+
+        // fetch minimal market info for linking
+        const marketIds = Array.from(new Set(comments.map(c => c.marketId)));
+        const MarketModel = (await import("../../models/Market")).Market;
+        const markets = await MarketModel.find({ _id: { $in: marketIds } }, { title: 1 }).lean();
+        const marketMap = new Map(markets.map(m => [String(m._id), m.title]));
+
+        const formatted = comments.map(c => ({
+          _id: String(c._id),
+          marketId: c.marketId,
+          marketTitle: marketMap.get(c.marketId) || "Market",
+          message: c.message,
+          imageUrl: c.imageUrl,
+          createdAt: c.createdAt,
+        }));
+
+        const total = await Comment.countDocuments({ wallet });
+
+        ack?.({ ok: true, data: { comments: formatted, total, page: pg, limit: lim } });
+      } catch (err) {
+        const e = err as Error;
+        ack?.({ ok: false, error: e.message });
+      }
+    }
+  );
   socket.on(
     "like_comment",
     async (

@@ -7,10 +7,8 @@ pragma solidity ^0.8.20;
  * @dev All prices use 1e18 scaling for precision
  */
 library PriceMath {
-    /// @notice Fixed point scale (1e18)
-    uint256 public constant SCALE = 1e18;
-    
-    /// @notice Maximum safe integer for calculations
+    // We operate in raw token wei units (no implicit scaling)
+    // Dividends in MarketPair still use 1e18 scale for per-share accounting.
     uint256 public constant MAX_SAFE_INTEGER = type(uint128).max;
 
     /**
@@ -31,12 +29,12 @@ library PriceMath {
         if (sharesToBuy == 0) return 0;
         
         // Calculate base cost: basePrice * sharesToBuy
-        uint256 baseCost = (basePrice * sharesToBuy) / SCALE;
+        uint256 baseCost = basePrice * sharesToBuy;
         
         // Calculate increment cost: increment * (currentShares * sharesToBuy + sharesToBuy * (sharesToBuy - 1) / 2)
         // This is the sum of increments for each share: increment * Σ(i = 1 to Δ) (s + i - 1)
-        uint256 incrementCost = (increment * currentShares * sharesToBuy) / SCALE;
-        incrementCost += (increment * sharesToBuy * (sharesToBuy - 1)) / (2 * SCALE);
+        uint256 incrementCost = increment * currentShares * sharesToBuy;
+        incrementCost += (increment * sharesToBuy * (sharesToBuy - 1)) / 2;
         
         totalCost = baseCost + incrementCost;
     }
@@ -63,11 +61,11 @@ library PriceMath {
         uint256 startPosition = currentShares - sharesToSell;
         
         // Calculate base refund: basePrice * sharesToSell
-        uint256 baseRefund = (basePrice * sharesToSell) / SCALE;
+        uint256 baseRefund = basePrice * sharesToSell;
         
         // Calculate increment refund: increment * (startPosition * sharesToSell + sharesToSell * (sharesToSell - 1) / 2)
-        uint256 incrementRefund = (increment * startPosition * sharesToSell) / SCALE;
-        incrementRefund += (increment * sharesToSell * (sharesToSell - 1)) / (2 * SCALE);
+        uint256 incrementRefund = increment * startPosition * sharesToSell;
+        incrementRefund += (increment * sharesToSell * (sharesToSell - 1)) / 2;
         
         totalRefund = baseRefund + incrementRefund;
     }
@@ -93,7 +91,8 @@ library PriceMath {
         uint256 high = MAX_SAFE_INTEGER;
         
         // Cap high to prevent overflow in calculations
-        uint256 maxPossibleShares = budget * SCALE / basePrice;
+        if (basePrice == 0) return 0;
+        uint256 maxPossibleShares = budget / basePrice;
         if (maxPossibleShares < high) {
             high = maxPossibleShares;
         }
@@ -124,7 +123,7 @@ library PriceMath {
         uint256 basePrice,
         uint256 increment
     ) internal pure returns (uint256 marginalPrice) {
-        return basePrice + (increment * currentShares) / SCALE;
+        return basePrice + (increment * currentShares);
     }
 
     /**
@@ -144,7 +143,7 @@ library PriceMath {
         if (sharesToBuy == 0) return 0;
         
         uint256 totalCost = costToBuyFrom(currentShares, sharesToBuy, basePrice, increment);
-        return (totalCost * SCALE) / sharesToBuy;
+        return totalCost / sharesToBuy;
     }
 
     /**
@@ -157,6 +156,6 @@ library PriceMath {
         uint256 basePrice,
         uint256 increment
     ) internal pure returns (bool isValid) {
-        return basePrice > 0 && increment >= 0 && basePrice <= MAX_SAFE_INTEGER && increment <= MAX_SAFE_INTEGER;
+        return basePrice > 0 && increment <= MAX_SAFE_INTEGER;
     }
 }

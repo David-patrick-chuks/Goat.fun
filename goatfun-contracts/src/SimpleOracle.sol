@@ -2,7 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IMarketOracle.sol";
+import "src/interfaces/IMarketOracle.sol";
+import "src/interfaces/IMarketPair.sol";
 
 /**
  * @title SimpleOracle
@@ -20,6 +21,9 @@ contract SimpleOracle is IMarketOracle, Ownable {
     event OracleAuthorized(address indexed market, address indexed oracle);
     event OracleRevoked(address indexed market, address indexed oracle);
     event MarketResolved(address indexed market, MarketResult result);
+
+    /// @notice Initialize owner
+    constructor() Ownable(msg.sender) {}
 
     /**
      * @notice Authorize an oracle for a specific market
