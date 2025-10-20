@@ -1,0 +1,17 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.20"
+optimizer = true
+optimizer_runs = 200
+
+[rpc_endpoints]
+goat_testnet3 = "https://rpc.testnet3.goat.network"
+goat_mainnet = "https://rpc.goat.network"
+
+[etherscan]
+goat_testnet3 = { key = "", url = "https://explorer.testnet3.goat.network/api" }
+goat_mainnet = { key = "", url = "https://explorer.goat.network/api" }
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
