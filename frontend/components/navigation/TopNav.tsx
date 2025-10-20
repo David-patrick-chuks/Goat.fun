@@ -41,6 +41,11 @@ const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
       {/* you can use it if you want to disconnect the wallet in profile page */}
       <h1 onClick={() => handledisconnect()}>disconnect</h1>
 
+      {openChainModal && (
+        <button onClick={openChainModal} type="button">
+          Open Chain Modal
+        </button>
+      )}
       {/* Mobile Logo - only show on mobile */}
       <div className="flex items-center gap-2 md:hidden">
         <Image
